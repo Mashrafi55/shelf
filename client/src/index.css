@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+:root {
+  --cream: #f5f0e8;
+  --charcoal: #1a1917;
+  --green: #3d6b5a;
+  --terracotta: #c4785a;
+  --cream-dark: #e8e0d0;
+  --charcoal-light: #2d2b29;
+  --charcoal-muted: #6b6860;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Manrope', sans-serif;
+  background-color: var(--cream);
+  color: var(--charcoal);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.dark {
+  background-color: var(--charcoal);
+  color: var(--cream);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Newsreader', serif;
+}
+
+.font-serif {
+  font-family: 'Newsreader', serif;
+}
