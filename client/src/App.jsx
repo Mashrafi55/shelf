@@ -5,6 +5,7 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import BookDetail from './pages/BookDetail'
+import Reader from './pages/Reader'
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -30,6 +31,7 @@ function App() {
   <Route path="/login" element={<Login darkMode={darkMode} />} />
   <Route path="/register" element={<Register darkMode={darkMode} />} />
   <Route path="/book/:id" element={<BookDetail darkMode={darkMode} />} />
+  <Route path="/read/:id" element={<Reader darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
 </Routes>
       </main>
     </>
