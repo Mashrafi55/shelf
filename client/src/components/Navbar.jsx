@@ -30,7 +30,7 @@ function Navbar({ darkMode, toggleDarkMode }) {
           fontFamily: 'Newsreader, serif',
           fontSize: '28px',
           fontStyle: 'italic',
-          color: '#3d6b5a',
+          color: '#c4502e',
           textDecoration: 'none',
           letterSpacing: '-0.02em',
         }}>
@@ -66,7 +66,7 @@ function Navbar({ darkMode, toggleDarkMode }) {
             fontSize: '13px',
             textTransform: 'uppercase',
             letterSpacing: '0.05em',
-            backgroundColor: '#3d6b5a',
+            backgroundColor: '#c4502e',
             color: '#f5f0e8',
             textDecoration: 'none',
             padding: '8px 20px',

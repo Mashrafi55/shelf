@@ -24,11 +24,11 @@ function App() {
     <>
       <Navbar darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
       <main style={{ paddingTop: '64px' }}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-        </Routes>
+<Routes>
+  <Route path="/" element={<Home darkMode={darkMode} />} />
+  <Route path="/login" element={<Login darkMode={darkMode} />} />
+  <Route path="/register" element={<Register darkMode={darkMode} />} />
+</Routes>
       </main>
     </>
   )
