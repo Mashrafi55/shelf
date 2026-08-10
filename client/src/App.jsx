@@ -4,6 +4,7 @@ import Navbar from './components/Navbar'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import BookDetail from './pages/BookDetail'
 
 function App() {
   const [darkMode, setDarkMode] = useState(() => {
@@ -28,6 +29,7 @@ function App() {
   <Route path="/" element={<Home darkMode={darkMode} />} />
   <Route path="/login" element={<Login darkMode={darkMode} />} />
   <Route path="/register" element={<Register darkMode={darkMode} />} />
+  <Route path="/book/:id" element={<BookDetail darkMode={darkMode} />} />
 </Routes>
       </main>
     </>
