@@ -3,7 +3,7 @@
 :root {
   --cream: #f5f0e8;
   --charcoal: #1a1917;
-  --green: #c4502e; 
+  --green: #c4502e;
   --terracotta: #c4785a;
   --cream-dark: #e8e0d0;
   --charcoal-light: #2d2b29;
@@ -28,7 +28,12 @@ body.dark {
   color: var(--cream);
 }
 
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: 'Newsreader', serif;
 }
 

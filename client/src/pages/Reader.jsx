@@ -1,20 +1,21 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Minus, Plus, Sun, Moon, BookOpen, Bookmark } from 'lucide-react'
+import { ArrowLeft, ArrowRight, Sun, Moon, BookOpen, Bookmark } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
+import { useTheme } from '../context/ThemeContext'
+import useAuthStore from '../store/authStore'
+import { API, ACCENT } from '../constants'
 
-const API = 'http://localhost:5000/api'
-const ACCENT = '#c4502e'
-
-function Reader({ darkMode, toggleDarkMode }) {
+function Reader() {
+  const { darkMode, toggleDarkMode } = useTheme()
+  const { user } = useAuthStore()
   const { id } = useParams()
   const navigate = useNavigate()
   const [book, setBook] = useState(null)
   const [currentPage, setCurrentPage] = useState(0)
   const [fontSize, setFontSize] = useState(18)
   const [loading, setLoading] = useState(true)
-  const user = JSON.parse(localStorage.getItem('user') || 'null')
 
   const bg = darkMode ? '#1a1917' : '#f5f0e8'
   const text = darkMode ? '#f0ece4' : '#1a1917'
@@ -37,7 +38,7 @@ function Reader({ darkMode, toggleDarkMode }) {
           )
           if (progress) setCurrentPage(progress.lastPage - 1)
         }
-      } catch (error) {
+      } catch {
         toast.error('Could not load book')
         navigate('/')
       } finally {
@@ -45,7 +46,7 @@ function Reader({ darkMode, toggleDarkMode }) {
       }
     }
     fetchBook()
-  }, [id])
+  }, [id, user, navigate])
 
   // Save progress
   useEffect(() => {
@@ -61,7 +62,7 @@ function Reader({ darkMode, toggleDarkMode }) {
       }
     }, 2000)
     return () => clearTimeout(timeout)
-  }, [currentPage, book])
+  }, [currentPage, book, id, user])
 
   const handleBookmark = async () => {
     if (!user) return toast.error('Login to bookmark pages')

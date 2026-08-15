@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import toast from 'react-hot-toast'
-
-const ACCENT = '#c4502e'
-const API = 'http://localhost:5000/api'
+import { useTheme } from '../context/ThemeContext'
+import useAuthStore from '../store/authStore'
+import { API, ACCENT } from '../constants'
+import { API, ACCENT, GENRES } from '../constants'
 
 const GENRES = [
   'Fiction', 'Non-Fiction', 'Philosophy', 'Science', 'History',
@@ -13,14 +14,14 @@ const GENRES = [
   'Business', 'Travel', 'Art', 'Religion', 'Politics',
 ]
 
-function Onboarding({ darkMode }) {
+function Onboarding() {
+  const { darkMode } = useTheme()
+  const { user, setUser } = useAuthStore()
   const [selected, setSelected] = useState([])
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-  const user = JSON.parse(localStorage.getItem('user') || 'null')
 
   const bg = darkMode ? '#1a1917' : '#f5f0e8'
-  const card = darkMode ? '#2d2b29' : '#ffffff'
   const text = darkMode ? '#f5f0e8' : '#1a1917'
   const muted = darkMode ? '#9a9490' : '#6b6860'
   const border = darkMode ? '#3d3b39' : '#e8e0d0'
@@ -43,11 +44,10 @@ function Onboarding({ darkMode }) {
       await axios.put(`${API}/user/genres`, { genres: selected }, {
         headers: { Authorization: `Bearer ${user.token}` }
       })
-      const updatedUser = { ...user, onboardingComplete: true }
-      localStorage.setItem('user', JSON.stringify(updatedUser))
+      setUser({ ...user, onboardingComplete: true })
       toast.success('Your shelf is ready!')
       navigate('/')
-    } catch (error) {
+    } catch {
       toast.error('Something went wrong')
     } finally {
       setLoading(false)

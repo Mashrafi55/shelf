@@ -5,7 +5,7 @@ const protect = async (req, res, next) => {
   try {
     let token
 
-    if (req.cookies.token) {
+    if (req.cookies?.token) {
       token = req.cookies.token
     } else if (req.headers.authorization?.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1]
@@ -24,4 +24,45 @@ const protect = async (req, res, next) => {
   }
 }
 
-module.exports = { protect }
+const optionalProtect = async (req, res, next) => {
+  try {
+    let token
+    if (req.cookies.token) {
+      token = req.cookies.token
+    } else if (req.headers.authorization?.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1]
+    }
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET)
+      req.user = await User.findById(decoded.id).select('-password')
+    }
+    next()
+  } catch {
+    next()
+  }
+}
+
+module.exports = { protect, optionalProtect }
+
+
+const optionalProtect = async (req, res, next) => {
+  try {
+    let token
+
+    if (req.cookies?.token) {
+      token = req.cookies.token
+    } else if (req.headers.authorization?.startsWith('Bearer')) {
+      token = req.headers.authorization.split(' ')[1]
+    }
+
+    if (token) {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET)
+      req.user = await User.findById(decoded.id).select('-password')
+    }
+  } catch (error) {
+    // Continue even if token fails or expires
+  }
+  next()
+}
+
+module.exports = { protect, optionalProtect }

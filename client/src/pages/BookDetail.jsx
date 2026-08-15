@@ -1,20 +1,21 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Star, Heart, ArrowLeft, Lock } from 'lucide-react'
+import { Star, ArrowLeft, Lock } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
+import { useTheme } from '../context/ThemeContext'
+import useAuthStore from '../store/authStore'
+import { API, ACCENT } from '../constants'
 
-const ACCENT = '#c4502e'
-const API = 'http://localhost:5000/api'
-
-function BookDetail({ darkMode }) {
+function BookDetail() {
+  const { darkMode } = useTheme()
+  const { user } = useAuthStore()
   const { id } = useParams()
   const navigate = useNavigate()
   const [book, setBook] = useState(null)
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState(false)
-  const user = JSON.parse(localStorage.getItem('user') || 'null')
 
   const bg = darkMode ? '#1a1917' : '#f5f0e8'
   const card = darkMode ? '#2d2b29' : '#ffffff'
@@ -32,7 +33,7 @@ function BookDetail({ darkMode }) {
         ])
         setBook(bookRes.data)
         setReviews(reviewsRes.data)
-      } catch (error) {
+      } catch {
         toast.error('Book not found')
         navigate('/')
       } finally {
@@ -40,7 +41,7 @@ function BookDetail({ darkMode }) {
       }
     }
     fetchBook()
-  }, [id])
+  }, [id, user, navigate])
 
   const handleBuy = async () => {
     if (!user) return navigate('/login')
@@ -163,7 +164,7 @@ function BookDetail({ darkMode }) {
 
             {book.averageRating > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
-                {[1,2,3,4,5].map(s => (
+                {[1, 2, 3, 4, 5].map(s => (
                   <Star key={s} size={16}
                     fill={s <= book.averageRating ? ACCENT : 'none'}
                     color={ACCENT} />
@@ -254,7 +255,7 @@ function BookDetail({ darkMode }) {
                         {review.user?.name}
                       </p>
                       <div style={{ display: 'flex', gap: '2px' }}>
-                        {[1,2,3,4,5].map(s => (
+                        {[1, 2, 3, 4, 5].map(s => (
                           <Star key={s} size={12}
                             fill={s <= review.rating ? ACCENT : 'none'}
                             color={ACCENT} />
