@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 :root {
-  --cream: #f5f0e8;
-  --charcoal: #1a1917;
-  --green: #c4502e;
-  --terracotta: #c4785a;
-  --cream-dark: #e8e0d0;
-  --charcoal-light: #2d2b29;
-  --charcoal-muted: #6b6860;
+  --cream: #f7f0e6;
+  --charcoal: #1a0a00;
+  --accent: #5c3317;
+  --accent-dark: #b8845a;
+  --cream-dark: #e0ceb4;
+  --charcoal-light: #1f1008;
+  --charcoal-muted: #8b6b50;
 }
 
 * {
@@ -24,16 +24,11 @@ body {
 }
 
 body.dark {
-  background-color: var(--charcoal);
+  background-color: #120a02;
   color: var(--cream);
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1, h2, h3, h4, h5, h6 {
   font-family: 'Newsreader', serif;
 }
 
