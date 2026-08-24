@@ -6,6 +6,7 @@ import BookDetail from './pages/BookDetail'
 import Reader from './pages/Reader'
 import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
+import Admin from './pages/Admin'
 
 function App() {
 
@@ -21,6 +22,7 @@ function App() {
           <Route path="/read/:id" element={<Reader />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </main>
     </>

@@ -10,13 +10,13 @@ export const COLORS = {
     muted: '#8b6b50',
     border: '#e0ceb4',
   },
-  dark: {
-    bg: '#120a02',
-    card: '#1f1008',
-    text: '#f7f0e6',
-    muted: '#8b7060',
-    border: '#2f2018',
-  }
+dark: {
+  bg: '#1c1410',
+  card: '#251a12',
+  text: '#e8ddd0',
+  muted: '#8b7060',
+  border: '#3a2a1e',
+}
 }
 
 export const GENRES = [

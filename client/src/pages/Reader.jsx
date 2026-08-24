@@ -145,6 +145,22 @@ function Reader() {
               fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase',
               letterSpacing: '0.1em', color: accent, marginBottom: '32px', fontWeight: '600',
             }}>Page {currentPage + 1} of {book.pages.length}</p>
+            {(page?.chapterNumber || page?.chapterTitle) && (
+              <div style={{ textAlign: 'center', margin: '48px 0' }}>
+                {page.chapterNumber && (
+                  <p style={{
+                    fontFamily: 'Manrope, sans-serif', fontSize: '12px', textTransform: 'uppercase',
+                    letterSpacing: '0.15em', color: accent, fontWeight: '600', marginBottom: '12px',
+                  }}>{page.chapterNumber}</p>
+                )}
+                {page.chapterTitle && (
+                  <h2 style={{
+                    fontFamily: 'Newsreader, serif', fontSize: `${fontSize + 8}px`,
+                    color: colors.text, fontWeight: '400', margin: 0,
+                  }}>{page.chapterTitle}</h2>
+                )}
+              </div>
+            )}
             <div style={{ fontFamily: 'Newsreader, serif', fontSize: `${fontSize}px`, color: colors.text, lineHeight: '1.9', textAlign: 'justify' }}>
               {page?.content}
             </div>

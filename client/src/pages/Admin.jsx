@@ -1,0 +1,457 @@
+import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Plus, Edit, Trash2, Users, BookOpen, DollarSign, X } from 'lucide-react'
+import axios from 'axios'
+import toast from 'react-hot-toast'
+import { useTheme } from '../context/ThemeContext'
+import useAuthStore from '../store/authStore'
+import { API, ACCENT, ACCENT_DARK, COLORS, GENRES } from '../constants'
+
+function Admin() {
+  const { darkMode } = useTheme()
+  const { user } = useAuthStore()
+  const navigate = useNavigate()
+  const [tab, setTab] = useState('books')
+  const [books, setBooks] = useState([])
+  const [users, setUsers] = useState([])
+  const [sales, setSales] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [showForm, setShowForm] = useState(false)
+  const [editingBook, setEditingBook] = useState(null)
+  const [genreOpen, setGenreOpen] = useState(false)
+  const [form, setForm] = useState({
+    title: '', author: '', description: '', coverImage: '',
+    genre: 'Fiction', price: '', isFree: false, freePreviewPages: 3,
+    pages: [{ pageNumber: 1, chapterNumber: '', chapterTitle: '', content: '' }]
+  })
+
+  const colors = COLORS[darkMode ? 'dark' : 'light']
+  const accent = darkMode ? ACCENT_DARK : ACCENT
+  const headers = { Authorization: `Bearer ${user?.token}` }
+
+  useEffect(() => {
+    if (!user || user.role !== 'admin') { navigate('/'); return }
+    fetchAll()
+  }, [user, navigate])
+
+  const fetchAll = async () => {
+    try {
+      const [booksRes, usersRes, salesRes] = await Promise.all([
+        axios.get(`${API}/admin/books`, { headers }),
+        axios.get(`${API}/admin/users`, { headers }),
+        axios.get(`${API}/admin/sales`, { headers }),
+      ])
+      setBooks(booksRes.data)
+      setUsers(usersRes.data)
+      setSales(salesRes.data)
+    } catch {
+      toast.error('Could not load admin data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleFormChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }))
+  }
+
+  const handlePageChange = (index, field, value) => {
+    const newPages = form.pages.map((p, i) => i === index ? { ...p, [field]: value } : p)
+    setForm(prev => ({ ...prev, pages: newPages }))
+  }
+
+  const addPage = () => {
+    setForm(prev => ({
+      ...prev,
+      pages: [...prev.pages, { pageNumber: prev.pages.length + 1, chapterNumber: '', chapterTitle: '', content: '' }]
+    }))
+  }
+
+  const removePage = (index) => {
+    const newPages = form.pages.filter((_, i) => i !== index)
+      .map((p, i) => ({ ...p, pageNumber: i + 1 }))
+    setForm(prev => ({ ...prev, pages: newPages }))
+  }
+
+  const openAdd = () => {
+    setEditingBook(null)
+    setForm({
+      title: '', author: '', description: '', coverImage: '',
+      genre: 'Fiction', price: '', isFree: false, freePreviewPages: 3,
+      pages: [{ pageNumber: 1, chapterNumber: '', chapterTitle: '', content: '' }]
+    })
+    setShowForm(true)
+  }
+
+  const openEdit = (book) => {
+    setEditingBook(book)
+    setForm({
+      title: book.title, author: book.author, description: book.description,
+      coverImage: book.coverImage, genre: book.genre, price: book.price,
+      isFree: book.isFree, freePreviewPages: book.freePreviewPages,
+      pages: book.pages.length > 0
+        ? book.pages.map(p => ({ chapterNumber: '', chapterTitle: '', ...p }))
+        : [{ pageNumber: 1, chapterNumber: '', chapterTitle: '', content: '' }]
+    })
+    setShowForm(true)
+  }
+
+  const handleSubmit = async () => {
+    if (!form.title || !form.author || !form.description || !form.coverImage) {
+      return toast.error('Please fill all required fields')
+    }
+    try {
+      const payload = { ...form, price: form.isFree ? 0 : Number(form.price) }
+      if (editingBook) {
+        await axios.put(`${API}/admin/books/${editingBook._id}`, payload, { headers })
+        toast.success('Book updated!')
+      } else {
+        await axios.post(`${API}/admin/books`, payload, { headers })
+        toast.success('Book added!')
+      }
+      setShowForm(false)
+      fetchAll()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Something went wrong')
+    }
+  }
+
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this book?')) return
+    try {
+      await axios.delete(`${API}/admin/books/${id}`, { headers })
+      toast.success('Book deleted')
+      setBooks(prev => prev.filter(b => b._id !== id))
+    } catch {
+      toast.error('Could not delete book')
+    }
+  }
+
+  const totalRevenue = sales.reduce((acc, s) => acc + s.amountPaid, 0)
+
+  const inputStyle = {
+    width: '100%', background: 'none', border: 'none',
+    borderBottom: `1px solid ${colors.border}`, padding: '8px 0',
+    fontFamily: 'Manrope, sans-serif', fontSize: '15px',
+    color: colors.text, outline: 'none', backgroundColor: 'transparent',
+  }
+
+  const labelStyle = {
+    fontFamily: 'Manrope, sans-serif', fontSize: '11px',
+    textTransform: 'uppercase', letterSpacing: '0.05em',
+    color: colors.muted, display: 'block', marginBottom: '6px',
+  }
+
+  const chapterInputStyle = {
+    width: '100%', border: `1px solid ${colors.border}`, borderRadius: '8px',
+    padding: '8px 12px', backgroundColor: colors.card,
+    fontFamily: 'Manrope, sans-serif', fontSize: '13px',
+    color: colors.text, outline: 'none',
+  }
+
+  if (loading) return (
+    <div style={{ backgroundColor: colors.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ fontFamily: 'Newsreader, serif', fontSize: '24px', color: colors.muted, fontStyle: 'italic' }}>Loading...</p>
+    </div>
+  )
+
+  return (
+    <div style={{ backgroundColor: colors.bg, minHeight: '100vh' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '40px 24px' }}>
+
+        <div style={{ marginBottom: '48px' }}>
+          <p style={{
+            fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase',
+            letterSpacing: '0.1em', color: accent, fontWeight: '600', marginBottom: '8px',
+          }}>Admin Panel</p>
+          <h1 style={{ fontFamily: 'Newsreader, serif', fontSize: '40px', color: colors.text, fontWeight: '400' }}>
+            Shelf Dashboard
+          </h1>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '48px' }}>
+          {[
+            { label: 'Total Books', value: books.length, icon: <BookOpen size={20} /> },
+            { label: 'Total Users', value: users.length, icon: <Users size={20} /> },
+            { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)}`, icon: <DollarSign size={20} /> },
+          ].map(stat => (
+            <div key={stat.label} style={{
+              backgroundColor: colors.card, borderRadius: '12px',
+              padding: '24px', border: `1px solid ${colors.border}`,
+              display: 'flex', alignItems: 'center', gap: '16px',
+            }}>
+              <div style={{ color: accent }}>{stat.icon}</div>
+              <div>
+                <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.05em', color: colors.muted }}>{stat.label}</p>
+                <p style={{ fontFamily: 'Newsreader, serif', fontSize: '28px', color: colors.text }}>{stat.value}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', borderBottom: `1px solid ${colors.border}` }}>
+          {['books', 'users', 'sales'].map(t => (
+            <button key={t} onClick={() => setTab(t)} style={{
+              padding: '12px 20px', background: 'none', border: 'none',
+              borderBottom: tab === t ? `2px solid ${accent}` : '2px solid transparent',
+              marginBottom: '-1px', cursor: 'pointer',
+              fontFamily: 'Manrope, sans-serif', fontSize: '13px',
+              textTransform: 'uppercase', letterSpacing: '0.05em',
+              color: tab === t ? accent : colors.muted,
+              fontWeight: tab === t ? '700' : '400',
+            }}>{t}</button>
+          ))}
+        </div>
+
+        {tab === 'books' && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
+              <button onClick={openAdd} style={{
+                backgroundColor: accent, color: colors.bg, border: 'none',
+                padding: '10px 20px', borderRadius: '999px', cursor: 'pointer',
+                fontFamily: 'Manrope, sans-serif', fontSize: '13px',
+                textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700',
+                display: 'flex', alignItems: 'center', gap: '8px',
+              }}>
+                <Plus size={16} /> Add Book
+              </button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {books.map(book => (
+                <div key={book._id} style={{
+                  backgroundColor: colors.card, borderRadius: '12px',
+                  padding: '16px 20px', border: `1px solid ${colors.border}`,
+                  display: 'flex', alignItems: 'center', gap: '16px',
+                }}>
+                  <div style={{ width: '40px', height: '60px', borderRadius: '4px', overflow: 'hidden', backgroundColor: colors.border, flexShrink: 0 }}>
+                    <img src={book.coverImage} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontFamily: 'Newsreader, serif', fontSize: '18px', color: colors.text }}>{book.title}</p>
+                    <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted }}>{book.author} · {book.genre} · {book.isFree ? 'Free' : `$${book.price}`} · {book.pages.length} pages</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => openEdit(book)} style={{
+                      background: 'none', border: `1px solid ${colors.border}`, borderRadius: '8px',
+                      padding: '8px', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center',
+                    }}><Edit size={14} /></button>
+                    <button onClick={() => handleDelete(book._id)} style={{
+                      background: 'none', border: '1px solid #8b3a3a', borderRadius: '8px',
+                      padding: '8px', cursor: 'pointer', color: '#8b3a3a', display: 'flex', alignItems: 'center',
+                    }}><Trash2 size={14} /></button>
+                  </div>
+                </div>
+              ))}
+              {books.length === 0 && (
+                <p style={{ textAlign: 'center', padding: '48px', fontFamily: 'Newsreader, serif', fontSize: '20px', color: colors.muted, fontStyle: 'italic' }}>
+                  No books yet. Add your first book.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {tab === 'users' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {users.map(u => (
+              <div key={u._id} style={{
+                backgroundColor: colors.card, borderRadius: '12px',
+                padding: '16px 20px', border: `1px solid ${colors.border}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{
+                    width: '36px', height: '36px', borderRadius: '50%',
+                    backgroundColor: accent, display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', color: colors.bg,
+                    fontFamily: 'Manrope, sans-serif', fontSize: '14px', fontWeight: '700',
+                  }}>{u.name?.[0]?.toUpperCase()}</div>
+                  <div>
+                    <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '14px', color: colors.text, fontWeight: '600' }}>{u.name}</p>
+                    <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted }}>{u.email}</p>
+                  </div>
+                </div>
+                <span style={{
+                  fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase',
+                  letterSpacing: '0.05em', color: u.role === 'admin' ? accent : colors.muted, fontWeight: '600',
+                }}>{u.role}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {tab === 'sales' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {sales.map(sale => (
+              <div key={sale._id} style={{
+                backgroundColor: colors.card, borderRadius: '12px',
+                padding: '16px 20px', border: `1px solid ${colors.border}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              }}>
+                <div>
+                  <p style={{ fontFamily: 'Newsreader, serif', fontSize: '18px', color: colors.text }}>{sale.book?.title}</p>
+                  <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted }}>{sale.user?.name} · {sale.user?.email}</p>
+                </div>
+                <p style={{ fontFamily: 'Newsreader, serif', fontSize: '20px', color: accent }}>${sale.amountPaid}</p>
+              </div>
+            ))}
+            {sales.length === 0 && (
+              <p style={{ textAlign: 'center', padding: '48px', fontFamily: 'Newsreader, serif', fontSize: '20px', color: colors.muted, fontStyle: 'italic' }}>
+                No sales yet.
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {showForm && (
+        <div style={{
+          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)',
+          zIndex: 100, display: 'flex', alignItems: 'flex-start',
+          justifyContent: 'center', padding: '24px', overflowY: 'auto',
+        }}>
+          <div style={{
+            backgroundColor: colors.bg, borderRadius: '16px', padding: '40px',
+            width: '100%', maxWidth: '680px', border: `1px solid ${colors.border}`, margin: 'auto',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+              <h2 style={{ fontFamily: 'Newsreader, serif', fontSize: '28px', color: colors.text, fontWeight: '400' }}>
+                {editingBook ? 'Edit Book' : 'Add New Book'}
+              </h2>
+              <button onClick={() => setShowForm(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted }}>
+                <X size={20} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              <div>
+                <label style={labelStyle}>Title *</label>
+                <input name="title" value={form.title} onChange={handleFormChange} style={inputStyle} placeholder="Book title" />
+              </div>
+              <div>
+                <label style={labelStyle}>Author *</label>
+                <input name="author" value={form.author} onChange={handleFormChange} style={inputStyle} placeholder="Author name" />
+              </div>
+              <div>
+                <label style={labelStyle}>Description *</label>
+                <textarea name="description" value={form.description} onChange={handleFormChange}
+                  rows={4} style={{ ...inputStyle, resize: 'vertical', borderBottom: 'none', border: `1px solid ${colors.border}`, borderRadius: '8px', padding: '12px' }}
+                  placeholder="Book description" />
+              </div>
+              <div>
+                <label style={labelStyle}>Cover Image URL *</label>
+                <input name="coverImage" value={form.coverImage} onChange={handleFormChange} style={inputStyle} placeholder="https://..." />
+              </div>
+
+              {/* Custom Genre Dropdown */}
+              <div style={{ position: 'relative' }}>
+                <label style={labelStyle}>Genre</label>
+                <div onClick={() => setGenreOpen(!genreOpen)} style={{
+                  cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  backgroundColor: colors.card, padding: '10px 14px', borderRadius: '8px',
+                  border: `1px solid ${colors.border}`, fontFamily: 'Manrope, sans-serif',
+                  fontSize: '15px', color: colors.text,
+                }}>
+                  <span>{form.genre}</span>
+                  <span style={{ fontSize: '12px', color: colors.muted }}>▾</span>
+                </div>
+                {genreOpen && (
+                  <div style={{
+                    position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 200,
+                    backgroundColor: colors.card, border: `1px solid ${colors.border}`,
+                    borderRadius: '8px', maxHeight: '200px', overflowY: 'auto',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.3)', marginTop: '4px',
+                  }}>
+                    {GENRES.map(g => (
+                      <div key={g} onClick={() => { setForm(prev => ({ ...prev, genre: g })); setGenreOpen(false) }}
+                        style={{
+                          padding: '10px 16px', cursor: 'pointer',
+                          fontFamily: 'Manrope, sans-serif', fontSize: '14px',
+                          color: form.genre === g ? accent : colors.text,
+                          backgroundColor: form.genre === g ? colors.border : 'transparent',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.backgroundColor = colors.border}
+                        onMouseLeave={e => e.currentTarget.style.backgroundColor = form.genre === g ? colors.border : 'transparent'}
+                      >{g}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" name="isFree" checked={form.isFree} onChange={handleFormChange} />
+                  <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: '13px', color: colors.text }}>Free book</span>
+                </label>
+              </div>
+
+              {!form.isFree && (
+                <div>
+                  <label style={labelStyle}>Price ($)</label>
+                  <input name="price" type="number" value={form.price} onChange={handleFormChange} style={inputStyle} placeholder="0.00" />
+                </div>
+              )}
+
+              <div>
+                <label style={labelStyle}>Free Preview Pages</label>
+                <input name="freePreviewPages" type="number" value={form.freePreviewPages} onChange={handleFormChange} style={inputStyle} />
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                  <label style={{ ...labelStyle, marginBottom: 0 }}>Pages ({form.pages.length})</label>
+                  <button onClick={addPage} style={{
+                    background: 'none', border: `1px solid ${accent}`, borderRadius: '999px',
+                    padding: '4px 12px', cursor: 'pointer', color: accent,
+                    fontFamily: 'Manrope, sans-serif', fontSize: '11px',
+                    textTransform: 'uppercase', letterSpacing: '0.05em',
+                  }}>+ Add Page</button>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: '400px', overflowY: 'auto' }}>
+                  {form.pages.map((page, index) => (
+                    <div key={index}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                        <label style={{ ...labelStyle, marginBottom: 0 }}>Page {index + 1}</label>
+                        {form.pages.length > 1 && (
+                          <button onClick={() => removePage(index)} style={{
+                            background: 'none', border: 'none', cursor: 'pointer', color: '#8b3a3a', padding: '2px',
+                          }}><X size={14} /></button>
+                        )}
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: '12px', marginBottom: '10px' }}>
+                        <input value={page.chapterNumber || ''} onChange={e => handlePageChange(index, 'chapterNumber', e.target.value)}
+                          style={chapterInputStyle} placeholder="Ch. # (I, 1...)" />
+                        <input value={page.chapterTitle || ''} onChange={e => handlePageChange(index, 'chapterTitle', e.target.value)}
+                          style={chapterInputStyle} placeholder="Chapter title (optional)" />
+                      </div>
+                      <textarea value={page.content} onChange={e => handlePageChange(index, 'content', e.target.value)}
+                        rows={6} style={{
+                          width: '100%', border: `1px solid ${colors.border}`, borderRadius: '8px',
+                          padding: '12px', background: 'none', fontFamily: 'Newsreader, serif',
+                          fontSize: '15px', color: colors.text, outline: 'none', resize: 'vertical',
+                          backgroundColor: colors.card,
+                        }}
+                        placeholder={`Content for page ${index + 1}...`} />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <button onClick={handleSubmit} style={{
+                width: '100%', backgroundColor: accent, color: colors.bg, border: 'none',
+                padding: '14px', borderRadius: '999px', fontFamily: 'Manrope, sans-serif',
+                fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.08em',
+                fontWeight: '700', cursor: 'pointer', marginTop: '8px',
+              }}>
+                {editingBook ? 'Save Changes' : 'Add Book'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default Admin

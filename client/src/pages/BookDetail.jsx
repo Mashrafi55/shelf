@@ -81,6 +81,7 @@ function BookDetail() {
 
         <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', gap: isMobile ? '32px' : '64px', marginBottom: '64px' }}>
 
+          {/* Left — Cover + CTA */}
           <div>
             <div style={{
               aspectRatio: '2/3', borderRadius: '12px', overflow: 'hidden',
@@ -108,9 +109,9 @@ function BookDetail() {
                 fontWeight: '700', textAlign: 'center',
               }}>Read Free</Link>
             ) : (
-              <div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                 <div style={{
-                  textAlign: 'center', marginBottom: '12px',
+                  textAlign: 'center', marginBottom: '4px',
                   fontFamily: 'Newsreader, serif', fontSize: '28px', color: colors.text,
                 }}>${book.price}</div>
                 <button onClick={handleBuy} disabled={purchasing} style={{
@@ -122,10 +123,18 @@ function BookDetail() {
                 }}>
                   {purchasing ? 'Processing...' : 'Buy & Read'}
                 </button>
+                <Link to={`/read/${book._id}`} style={{
+                  display: 'block', width: '100%', backgroundColor: 'transparent',
+                  color: accent, textDecoration: 'none', padding: '14px',
+                  borderRadius: '999px', fontFamily: 'Manrope, sans-serif',
+                  fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.08em',
+                  fontWeight: '700', textAlign: 'center', border: `1px solid ${accent}`,
+                }}>Read Preview</Link>
               </div>
             )}
           </div>
 
+          {/* Right — Info */}
           <div>
             <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', flexWrap: 'wrap' }}>
               <span style={{
@@ -145,7 +154,7 @@ function BookDetail() {
             </div>
 
             <h1 style={{
-              fontFamily: 'Newsreader, serif', fontSize: '48px',
+              fontFamily: 'Newsreader, serif', fontSize: isMobile ? '36px' : '48px',
               color: colors.text, lineHeight: '1.1', letterSpacing: '-0.02em',
               marginBottom: '8px', fontWeight: '400',
             }}>{book.title}</h1>
@@ -170,9 +179,10 @@ function BookDetail() {
 
             <p style={{
               fontFamily: 'Manrope, sans-serif', fontSize: '16px',
-              color: colors.muted, lineHeight: '1.8', marginBottom: '40px',
+              color: colors.text, lineHeight: '1.8', marginBottom: '40px',
             }}>{book.description}</p>
 
+            {/* Preview Section */}
             {book.pages && book.pages.length > 0 && (
               <div>
                 <span style={{
@@ -183,27 +193,37 @@ function BookDetail() {
 
                 <div style={{ position: 'relative' }}>
                   <div style={{
-                    backgroundColor: colors.card, borderRadius: '12px',
-                    padding: '32px', border: `1px solid ${colors.border}`,
-                    maxHeight: '300px', overflow: 'hidden',
+                    borderRadius: '12px', padding: '32px',
+                    border: `1px solid ${colors.border}`,
+                    maxHeight: '280px', overflow: 'hidden',
+                    backgroundColor: darkMode ? colors.card : '#fffdf9',
                   }}>
                     <p style={{
                       fontFamily: 'Newsreader, serif', fontSize: '18px',
-                      color: colors.text, lineHeight: '1.9',
+                      color: colors.text, lineHeight: '2',
+                      textIndent: '2em',
                     }}>{book.pages[0]?.content}</p>
                   </div>
 
                   {!book.owned && !book.isFree && (
                     <div style={{
-                      position: 'absolute', bottom: 0, left: 0, right: 0, height: '180px',
-                      background: `linear-gradient(to top, ${colors.card}, transparent)`,
+                      position: 'absolute', bottom: 0, left: 0, right: 0, height: '160px',
+                      background: `linear-gradient(to top, ${darkMode ? colors.card : '#fffdf9'} 30%, transparent)`,
                       borderRadius: '0 0 12px 12px',
                       display: 'flex', alignItems: 'flex-end',
-                      justifyContent: 'center', paddingBottom: '24px',
+                      justifyContent: 'center', paddingBottom: '20px',
                     }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: colors.muted }}>
-                        <Lock size={16} />
-                        <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: '13px' }}>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: '8px',
+                        backgroundColor: colors.card, padding: '8px 16px',
+                        borderRadius: '999px', border: `1px solid ${colors.border}`,
+                      }}>
+                        <Lock size={14} color={accent} />
+                        <span style={{
+                          fontFamily: 'Manrope, sans-serif', fontSize: '12px',
+                          color: colors.text, fontWeight: '600',
+                          textTransform: 'uppercase', letterSpacing: '0.05em',
+                        }}>
                           Buy to read full book
                         </span>
                       </div>

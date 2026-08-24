@@ -9,7 +9,12 @@ const bookSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   isFree: { type: Boolean, default: false },
   freePreviewPages: { type: Number, default: 3 },
-  pages: [{ pageNumber: Number, content: String }],
+  pages: [{
+    pageNumber: Number,
+    chapterTitle: { type: String, default: '' },
+    chapterNumber: { type: String, default: '' },
+    content: String
+  }],
   isPublished: { type: Boolean, default: true },
   averageRating: { type: Number, default: 0 },
   totalRatings: { type: Number, default: 0 },
