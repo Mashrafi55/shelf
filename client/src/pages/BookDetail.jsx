@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Star, ArrowLeft, Lock, Heart, Plus, Check, ChevronRight, Bookmark } from 'lucide-react'
+import { Star, ArrowLeft, Lock, Heart, Plus, Check } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
@@ -8,6 +8,7 @@ import useAuthStore from '../store/authStore'
 import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
 import useWindowSize from '../hooks/useWindowSize'
 import ReviewSection from '../components/ReviewSection'
+import ChapterList from '../components/ChapterList'
 import useFavouritesStore from '../store/favouritesStore'
 
 function BookDetail() {
@@ -24,6 +25,7 @@ function BookDetail() {
   const [previewPage, setPreviewPage] = useState(null)
   const [reloadKey, setReloadKey] = useState(0)
   const [chapters, setChapters] = useState([])
+  const [bookmarks, setBookmarks] = useState([]) // this user's bookmarks in this book
   const [lastPage, setLastPage] = useState(0) // 1-based page the reader stopped on, 0 = never opened
 
   const colors = COLORS[darkMode ? 'dark' : 'light']
@@ -33,14 +35,16 @@ function BookDetail() {
     const fetchBook = async () => {
       try {
         const headers = user ? { Authorization: `Bearer ${user.token}` } : {}
-        const [bookRes, reviewsRes, pageRes, chaptersRes, profileRes] = await Promise.all([
+        const [bookRes, reviewsRes, pageRes, chaptersRes, profileRes, bookmarksRes] = await Promise.all([
           axios.get(`${API}/books/${id}`, { headers }),
           axios.get(`${API}/books/${id}/reviews`),
           // preview page — works for both custom and gutenberg books
           axios.get(`${API}/books/${id}/pages/1`).catch(() => ({ data: null })),
           axios.get(`${API}/books/${id}/chapters`, { headers }).catch(() => ({ data: { chapters: [] } })),
           user ? axios.get(`${API}/user/profile`, { headers }).catch(() => null) : null,
+          user ? axios.get(`${API}/user/bookmarks`, { headers }).catch(() => null) : null,
         ])
+        setBookmarks((bookmarksRes?.data || []).filter(b => (b.book?._id || b.book) === id))
         const progress = profileRes?.data?.readingProgress?.find(p => (p.book?._id || p.book) === id)
         setLastPage(progress?.lastPage || 0)
         setChapters(chaptersRes.data.chapters || [])
@@ -108,48 +112,28 @@ function BookDetail() {
 
   if (!book) return null
 
-  // the chapter the reader stopped in = last one starting on or before the saved page
-  const lastReadIndex = lastPage ? chapters.reduce((found, c, i) => (c.page <= lastPage && !c.locked ? i : found), -1) : -1
+  const bookmarkedPages = new Set(bookmarks.map(b => b.pageNumber))
+  const toggleChapterBookmark = async (chapter) => {
+    if (!user) return navigate('/login')
+    try {
+      const existing = bookmarks.find(b => b.pageNumber === chapter.page)
+      if (existing) {
+        await axios.delete(`${API}/user/bookmarks/${existing._id}`, { headers: { Authorization: `Bearer ${user.token}` } })
+        setBookmarks(list => list.filter(b => b._id !== existing._id))
+        toast.success('Bookmark removed')
+      } else {
+        const { data } = await axios.post(`${API}/user/bookmarks`, { bookId: id, pageNumber: chapter.page }, { headers: { Authorization: `Bearer ${user.token}` } })
+        setBookmarks(list => [...list, data])
+        toast.success(`${chapter.label || chapter.title} bookmarked`)
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Could not update bookmark')
+    }
+  }
 
   const chaptersSection = chapters.length > 0 ? (
-
-              <div style={{ marginTop: isMobile ? '40px' : '28px' }}>
-                <span style={{
-                  fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase',
-                  letterSpacing: '0.1em', color: accent, fontWeight: '600', display: 'block', marginBottom: '16px',
-                }}>Chapters ({chapters.length})</span>
-                <div style={{ border: `1px solid ${colors.border}`, borderRadius: '12px', overflowY: 'auto', maxHeight: '360px', backgroundColor: colors.card, overscrollBehavior: 'contain' }} className="chapter-scroll">
-                  {chapters.map((c, i, list) => {
-                    const isLastRead = i === lastReadIndex
-                    const row = {
-                      display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', minHeight: '52px',
-                      borderBottom: i < list.length - 1 ? `1px solid ${colors.border}` : 'none',
-                      textDecoration: 'none', opacity: c.locked ? 0.55 : 1,
-                      borderLeft: `3px solid ${isLastRead ? accent : 'transparent'}`,
-                      backgroundColor: isLastRead ? (darkMode ? 'rgba(184,132,90,0.12)' : 'rgba(92,51,23,0.06)') : 'transparent',
-                    }
-                    const inner = (
-                      <>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: '13px', fontWeight: 700, color: colors.text }}>{c.label || c.title}</div>
-                          {c.label && c.title && (
-                            <div style={{ fontFamily: 'Newsreader, serif', fontSize: '15px', color: colors.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</div>
-                          )}
-                        </div>
-                        {isLastRead && (
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'Manrope, sans-serif', fontSize: '11px', fontWeight: 700, color: accent, whiteSpace: 'nowrap' }}>
-                            <Bookmark size={14} fill={accent} /> Page {lastPage}
-                          </span>
-                        )}
-                        {c.locked ? <Lock size={14} color={colors.muted} /> : <ChevronRight size={16} color={colors.muted} />}
-                      </>
-                    )
-                    return c.locked
-                      ? <div key={`${c.page}-${i}`} style={row}>{inner}</div>
-                      : <Link key={`${c.page}-${i}`} to={`/read/${book._id}?page=${isLastRead ? lastPage : c.page}`} style={row}>{inner}</Link>
-                  })}
-                </div>
-              </div>
+    <ChapterList bookId={book._id} chapters={chapters} lastPage={lastPage}
+      bookmarkedPages={bookmarkedPages} onToggleBookmark={toggleChapterBookmark} />
   ) : null
 
   return (
