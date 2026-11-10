@@ -70,17 +70,19 @@ export default function ChapterList({ bookId, chapters, lastPage, bookmarkedPage
           const bookmarked = bookmarkedPages.has(c.page)
           const labelColor = c.locked ? colors.muted : isRead ? colors.muted : accent
 
+          // plain running number as the name; the book's own heading (title, or e.g. "Letter 1") goes underneath
+          const subtitle = c.title || (/^chapter /i.test(c.label) ? '' : c.label)
           const text = (
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
                 fontFamily: 'Manrope, sans-serif', fontSize: '13px', color: labelColor,
                 fontWeight: isRead ? 500 : 700,
-              }}>{c.label || `Chapter ${i + 1}`}</div>
-              {c.title && (
+              }}>Chapter {i + 1}</div>
+              {subtitle && (
                 <div style={{
                   fontFamily: 'Newsreader, serif', fontSize: '14px', color: colors.muted,
                   whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                }}>{c.title}</div>
+                }}>{subtitle}</div>
               )}
             </div>
           )

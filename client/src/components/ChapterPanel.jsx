@@ -61,7 +61,9 @@ export default function ChapterPanel({ chapters, currentPage, totalPages, isMobi
               This book has no chapter headings. Use the page box above.
             </p>
           )}
-          {chapters.map((c, i) => (
+          {chapters.map((c, i) => {
+            const subtitle = c.title || (/^chapter /i.test(c.label) ? '' : c.label)
+            return (
             <button key={`${c.page}-${i}`} onClick={() => (c.locked ? toast('Buy this book to read this chapter') : onGo(c.page))} style={{
               width: '100%', textAlign: 'left', background: i === currentIndex ? colors.card : 'none',
               border: 'none', borderBottom: `1px solid ${colors.border}`, cursor: 'pointer',
@@ -69,9 +71,9 @@ export default function ChapterPanel({ chapters, currentPage, totalPages, isMobi
               opacity: c.locked ? 0.55 : 1,
             }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: '13px', fontWeight: 700, color: i === currentIndex ? accent : colors.text }}>{c.label || `Chapter ${i + 1}`}</div>
-                {c.title && (
-                  <div style={{ fontFamily: 'Newsreader, serif', fontSize: '15px', color: colors.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</div>
+                <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: '13px', fontWeight: 700, color: i === currentIndex ? accent : colors.text }}>Chapter {i + 1}</div>
+                {subtitle && (
+                  <div style={{ fontFamily: 'Newsreader, serif', fontSize: '15px', color: colors.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{subtitle}</div>
                 )}
               </div>
               {i === currentIndex && (
@@ -83,7 +85,8 @@ export default function ChapterPanel({ chapters, currentPage, totalPages, isMobi
                 <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted }}>p. {c.page}</span>
               )}
             </button>
-          ))}
+            )
+          })}
         </div>
       </aside>
     </div>
