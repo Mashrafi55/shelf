@@ -43,14 +43,7 @@ export default function BookCard({ book }) {
           e.currentTarget.style.boxShadow = 'none'
         }}
       >
-        <div style={{ aspectRatio: '2/3', overflow: 'hidden', backgroundColor: colors.border, flexShrink: 0, position: 'relative' }}>
-          <button onClick={onHeart} aria-label={favourited ? 'Remove from favourites' : 'Add to favourites'} style={{
-            position: 'absolute', top: '8px', right: '8px', zIndex: 1, width: '36px', height: '36px',
-            borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            backgroundColor: 'rgba(0,0,0,0.45)', color: '#fff',
-          }}>
-            <Heart size={16} fill={favourited ? '#e06666' : 'none'} color={favourited ? '#e06666' : '#fff'} />
-          </button>
+        <div style={{ aspectRatio: '2/3', overflow: 'hidden', backgroundColor: colors.border, flexShrink: 0 }}>
           {showCover ? (
             <img src={book.coverImage} alt={book.title} loading="lazy"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
@@ -70,10 +63,19 @@ export default function BookCard({ book }) {
           )}
         </div>
         <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <div style={{
-            fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em',
-            color: accent, fontFamily: 'Manrope, sans-serif', marginBottom: '6px', fontWeight: '600',
-          }}>{book.genre}</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <div style={{
+              fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em',
+              color: accent, fontFamily: 'Manrope, sans-serif', fontWeight: '600',
+            }}>{book.genre}</div>
+            <button onClick={onHeart} aria-label={favourited ? 'Remove from favourites' : 'Add to favourites'} style={{
+              // padding gives a 32px tap area; the negative margin keeps the row compact
+              background: 'none', border: 'none', cursor: 'pointer', padding: '8px',
+              margin: '-8px -8px -8px 0', display: 'flex', alignItems: 'center',
+            }}>
+              <Heart size={16} fill={favourited ? '#e06666' : 'none'} color={favourited ? '#e06666' : colors.muted} />
+            </button>
+          </div>
           <h3 style={{
             fontFamily: 'Newsreader, serif', fontSize: '18px',
             color: colors.text, marginBottom: '4px', lineHeight: '1.3',
