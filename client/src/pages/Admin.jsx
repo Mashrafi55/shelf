@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Edit, Trash2, Users, BookOpen, DollarSign, X, Download, Search, Loader2 } from 'lucide-react'
 import axios from 'axios'
@@ -6,6 +6,17 @@ import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
 import useAuthStore from '../store/authStore'
 import { API, ACCENT, ACCENT_DARK, COLORS, GENRES } from '../constants'
+
+// fetches everything the admin dashboard shows (no React state in here)
+const requestAdminData = async (token) => {
+  const headers = { Authorization: `Bearer ${token}` }
+  const [books, users, sales] = await Promise.all([
+    axios.get(`${API}/admin/books`, { headers }),
+    axios.get(`${API}/admin/users`, { headers }),
+    axios.get(`${API}/admin/sales`, { headers }),
+  ])
+  return { books: books.data, users: users.data, sales: sales.data }
+}
 
 function Admin() {
   const { darkMode } = useTheme()
@@ -35,27 +46,34 @@ function Admin() {
   const accent = darkMode ? ACCENT_DARK : ACCENT
   const headers = { Authorization: `Bearer ${user?.token}` }
 
-  useEffect(() => {
-    if (!user || user.role !== 'admin') { navigate('/'); return }
-    fetchAll()
-  }, [user, navigate])
+  const token = user?.token
 
-  const fetchAll = async () => {
+  const applyData = useCallback(({ books, users, sales }) => {
+    setBooks(books)
+    setUsers(users)
+    setSales(sales)
+  }, [])
+
+  // re-load after saving / deleting something
+  const fetchAll = useCallback(async () => {
     try {
-      const [booksRes, usersRes, salesRes] = await Promise.all([
-        axios.get(`${API}/admin/books`, { headers }),
-        axios.get(`${API}/admin/users`, { headers }),
-        axios.get(`${API}/admin/sales`, { headers }),
-      ])
-      setBooks(booksRes.data)
-      setUsers(usersRes.data)
-      setSales(salesRes.data)
+      applyData(await requestAdminData(token))
     } catch {
       toast.error('Could not load admin data')
     } finally {
       setLoading(false)
     }
-  }
+  }, [token, applyData])
+
+  useEffect(() => {
+    if (!user || user.role !== 'admin') { navigate('/'); return }
+    let cancelled = false
+    requestAdminData(token)
+      .then(data => { if (!cancelled) applyData(data) })
+      .catch(() => { if (!cancelled) toast.error('Could not load admin data') })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [user, token, navigate, applyData])
 
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target

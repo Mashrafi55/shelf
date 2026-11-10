@@ -18,7 +18,6 @@ function Reader() {
   const [loading, setLoading] = useState(true)
   const [pageData, setPageData] = useState(null)
   const [totalPages, setTotalPages] = useState(0)
-  const [pageLoading, setPageLoading] = useState(false)
 
   const colors = COLORS[darkMode ? 'dark' : 'light']
   const accent = darkMode ? ACCENT_DARK : ACCENT
@@ -47,31 +46,35 @@ function Reader() {
     fetchBook()
   }, [id, user, navigate])
 
-  const fetchPage = async (pageNumber) => {
-    setPageLoading(true)
-    try {
-      const headers = user ? { Authorization: `Bearer ${user.token}` } : {}
-      const { data } = await axios.get(`${API}/books/${id}/pages/${pageNumber}`, { headers })
-      setPageData(data)
-      if (data.totalPages && pageNumber < data.totalPages) {
-        // pre-fetch next page silently — no loading state
-        axios.get(`${API}/books/${id}/pages/${pageNumber + 1}`, { headers }).catch(() => {})
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Could not load page')
-      navigate(`/book/${id}`)
-    } finally {
-      setPageLoading(false)
-    }
-  }
+  // the page on screen is "loading" until the fetched page matches the one asked for
+  const pageLoading = pageData?.pageNumber !== currentPage + 1
 
   useEffect(() => {
     if (!book || !totalPages) return
     const isLocked = !book.owned && !book.isFree && currentPage >= book.freePreviewPages
     if (isLocked) return
-    fetchPage(currentPage + 1)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [book, totalPages, currentPage])
+
+    let cancelled = false // ignore answers for pages we've already flipped past
+    const pageNumber = currentPage + 1
+    const headers = user ? { Authorization: `Bearer ${user.token}` } : {}
+
+    axios.get(`${API}/books/${id}/pages/${pageNumber}`, { headers })
+      .then(({ data }) => {
+        if (cancelled) return
+        setPageData(data)
+        if (data.totalPages && pageNumber < data.totalPages) {
+          // pre-fetch next page silently — no loading state
+          axios.get(`${API}/books/${id}/pages/${pageNumber + 1}`, { headers }).catch(() => {})
+        }
+      })
+      .catch(error => {
+        if (cancelled) return
+        toast.error(error.response?.data?.message || 'Could not load page')
+        navigate(`/book/${id}`)
+      })
+
+    return () => { cancelled = true }
+  }, [book, totalPages, currentPage, id, user, navigate])
 
   useEffect(() => {
     if (!book || !user) return
