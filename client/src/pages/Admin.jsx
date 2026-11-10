@@ -5,7 +5,7 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
 import useAuthStore from '../store/authStore'
-import { API, ACCENT, ACCENT_DARK, COLORS, GENRES } from '../constants'
+import { API, ACCENT, ACCENT_DARK, COLORS, GENRES, coverSrc } from '../constants'
 import useWindowSize from '../hooks/useWindowSize'
 
 // fetches everything the admin dashboard shows (no React state in here)
@@ -34,6 +34,8 @@ function Admin() {
   const [genreOpen, setGenreOpen] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [coverUploading, setCoverUploading] = useState(false)
+  const coverInputRef = useRef(null)
   const [bulkText, setBulkText] = useState('')
   const [bulkRunning, setBulkRunning] = useState(false)
   const [bulkResults, setBulkResults] = useState([])
@@ -178,6 +180,26 @@ function Admin() {
       setBooks(prev => prev.filter(b => b._id !== id))
     } catch {
       toast.error('Could not delete book')
+    }
+  }
+
+  // upload your own cover image (JPEG / PNG / WebP, max 2 MB) and use it for this book
+  const handleCoverUpload = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) return toast.error('Image is too large (max 2 MB)')
+    setCoverUploading(true)
+    try {
+      const body = new FormData()
+      body.append('image', file)
+      const { data } = await axios.post(`${API}/admin/covers`, body, { headers })
+      setForm(prev => ({ ...prev, coverImage: data.url }))
+      toast.success('Cover uploaded. Save the book to keep it.')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Could not upload the image')
+    } finally {
+      setCoverUploading(false)
     }
   }
 
@@ -385,7 +407,7 @@ function Admin() {
                   display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap',
                 }}>
                   <div style={{ width: '40px', height: '60px', borderRadius: '4px', overflow: 'hidden', backgroundColor: colors.border, flexShrink: 0 }}>
-                    <img src={book.coverImage} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={coverSrc(book.coverImage)} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                   <div style={{ flex: '1 1 160px', minWidth: 0 }}>
                     <p style={{ fontFamily: 'Newsreader, serif', fontSize: '18px', color: colors.text }}>{book.title}{book.isPublished === false && (
@@ -638,8 +660,21 @@ function Admin() {
                   placeholder="Book description" />
               </div>
               <div>
-                <label style={labelStyle}>Cover Image URL *</label>
-                <input name="coverImage" value={form.coverImage} onChange={handleFormChange} style={inputStyle} placeholder="https://..." />
+                <label style={labelStyle}>Cover Image *</label>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
+                  <input name="coverImage" value={form.coverImage?.startsWith('data:') ? '' : form.coverImage}
+                    onChange={handleFormChange} style={{ ...inputStyle, flex: 1, minWidth: 0 }}
+                    placeholder={form.coverImage?.startsWith('data:') ? 'Generated cover in use. Paste a link or upload to replace it' : 'Paste an image link, or upload one'} />
+                  <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleCoverUpload} style={{ display: 'none' }} />
+                  <button type="button" onClick={() => coverInputRef.current?.click()} disabled={coverUploading} style={{
+                    flexShrink: 0, background: 'none', border: `1px solid ${accent}`, color: accent, borderRadius: '999px',
+                    padding: '10px 16px', cursor: coverUploading ? 'wait' : 'pointer', fontFamily: 'Manrope, sans-serif',
+                    fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'flex', alignItems: 'center', gap: '6px',
+                  }}><Upload size={14} /> {coverUploading ? 'Uploading...' : 'Upload'}</button>
+                </div>
+                {form.coverImage && (
+                  <img src={coverSrc(form.coverImage)} alt="Cover preview" style={{ marginTop: '12px', height: '120px', aspectRatio: '2/3', objectFit: 'cover', borderRadius: '6px', border: `1px solid ${colors.border}` }} />
+                )}
               </div>
 
               {/* Custom Genre Dropdown */}

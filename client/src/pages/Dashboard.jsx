@@ -9,7 +9,7 @@ import useWindowSize from '../hooks/useWindowSize'
 import useGridColumns from '../hooks/useGridColumns'
 import BookCard from '../components/BookCard'
 import useFavouritesStore from '../store/favouritesStore'
-import { API, ACCENT, ACCENT_DARK, COLORS, LIBRARY_STATUSES } from '../constants'
+import { API, ACCENT, ACCENT_DARK, COLORS, LIBRARY_STATUSES, coverSrc } from '../constants'
 
 // % read, clamped to 0-100 (imported books keep their page count in totalPages)
 const bookProgress = ({ book, lastPage }) => {
@@ -122,7 +122,7 @@ function Dashboard() {
               width: '60px', height: '90px', borderRadius: '8px',
               overflow: 'hidden', backgroundColor: colors.border, flexShrink: 0,
             }}>
-              <img src={currentlyReading.book.coverImage} alt={currentlyReading.book.title}
+              <img src={coverSrc(currentlyReading.book.coverImage)} alt={currentlyReading.book.title}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <div style={{ flex: '1 1 160px', minWidth: 0 }}>

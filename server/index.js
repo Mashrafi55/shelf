@@ -26,6 +26,8 @@ const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173').sp
 app.use(cors({ origin: allowedOrigins, credentials: true }))
 app.use(express.json({ limit: '1mb' }))
 app.use(cookieParser())
+// cover images are cheap, cacheable and loaded dozens at a time, so they skip the general API rate limit
+app.use('/api/covers', require('./routes/covers'))
 app.use('/api', apiLimiter)
 app.use('/api/auth', authLimiter)
 

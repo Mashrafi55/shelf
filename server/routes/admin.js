@@ -12,7 +12,8 @@ const {
   importGutenberg,
   deleteReview,
   uploadBook,
-  addGutenbergBook
+  addGutenbergBook,
+  uploadCover
 } = require('../controllers/adminController')
 const { protect } = require('../middleware/auth')
 const { isAdmin } = require('../middleware/isAdmin')
@@ -35,6 +36,12 @@ const handleUpload = (req, res, next) => upload(req, res, (error) => {
 })
 
 router.get('/books', getAllBooks)
+const coverUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024, files: 1 } }).single('image')
+const handleCoverUpload = (req, res, next) => coverUpload(req, res, (error) => {
+  if (!error) return next()
+  res.status(error.code === 'LIMIT_FILE_SIZE' ? 413 : 400).json({ message: error.code === 'LIMIT_FILE_SIZE' ? 'Image is too large (max 2 MB)' : 'Upload failed' })
+})
+router.post('/covers', handleCoverUpload, uploadCover)
 router.post('/books/upload', handleUpload, uploadBook)
 router.post('/books', validate(schemas.addBook), addBook)
 router.put('/books/:id', validateIds('id'), validate(schemas.editBook), editBook)

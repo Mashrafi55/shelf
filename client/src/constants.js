@@ -1,4 +1,8 @@
 export const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+// uploaded covers are stored as "/api/covers/<id>" - they live on the API server, not the web app
+export const API_ORIGIN = API.replace(/\/api\/?$/, '')
+export const coverSrc = (url) => (typeof url === 'string' && url.startsWith('/api/') ? API_ORIGIN + url : url)
+
 export const ACCENT = '#5c3317'
 export const ACCENT_DARK = '#b8845a'
 

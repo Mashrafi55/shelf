@@ -5,7 +5,7 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
 import useAuthStore from '../store/authStore'
-import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
+import { API, ACCENT, ACCENT_DARK, COLORS, coverSrc } from '../constants'
 import useWindowSize from '../hooks/useWindowSize'
 import ReviewSection from '../components/ReviewSection'
 import ChapterList from '../components/ChapterList'
@@ -167,7 +167,7 @@ function BookDetail() {
               maxWidth: isMobile ? '240px' : 'none', marginLeft: isMobile ? 'auto' : 0, marginRight: isMobile ? 'auto' : 0,
               boxShadow: '0 24px 48px rgba(0,0,0,0.15)',
             }}>
-              <img src={book.coverImage} alt={book.title}
+              <img src={coverSrc(book.coverImage)} alt={book.title}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
 

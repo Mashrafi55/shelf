@@ -3,6 +3,7 @@ const User = require('../models/User')
 const Purchase = require('../models/Purchase')
 const Review = require('../models/Review')
 const BookPage = require('../models/BookPage')
+const Cover = require('../models/Cover')
 const { parseUpload } = require('../utils/importFile')
 const { generateCover } = require('../utils/gutenberg')
 const { recalcBookRating } = require('../utils/ratings')
@@ -31,11 +32,38 @@ const addBook = async (req, res) => {
   }
 }
 
+// a book's cover may be an uploaded one (/api/covers/<id>): delete it when it is replaced or the book is deleted
+const coverId = (url) => String(url || '').match(/^\/api\/covers\/([a-f0-9]{24})$/i)?.[1]
+const dropCover = (url) => { const id = coverId(url); return id ? Cover.findByIdAndDelete(id).catch(() => {}) : null }
+
+// image types we accept, recognised by their first bytes (the file name and declared type can be faked)
+const sniffImage = (b) => {
+  if (b.length > 12 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'image/jpeg'
+  if (b.length > 12 && b.slice(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'image/png'
+  if (b.length > 12 && b.slice(0, 4).toString() === 'RIFF' && b.slice(8, 12).toString() === 'WEBP') return 'image/webp'
+  return null
+}
+
+// @POST /api/admin/covers - Upload a cover image (JPEG, PNG or WebP, max 2 MB); returns its url
+const uploadCover = async (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'Choose an image file' })
+  const contentType = sniffImage(req.file.buffer)
+  if (!contentType) return res.status(400).json({ message: 'Cover must be a JPEG, PNG or WebP image' })
+  try {
+    const cover = await Cover.create({ data: req.file.buffer, contentType })
+    res.status(201).json({ url: `/api/covers/${cover._id}` })
+  } catch {
+    res.status(500).json({ message: 'Could not save the image' })
+  }
+}
+
 // @PUT /api/admin/books/:id - Edit a book
 const editBook = async (req, res) => {
   try {
+    const before = req.body.coverImage ? await Book.findById(req.params.id).select('coverImage') : null
     const book = await Book.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
     if (!book) return res.status(404).json({ message: 'Book not found' })
+    if (before && before.coverImage !== book.coverImage) await dropCover(before.coverImage)
     res.json(book)
   } catch (error) {
     res.status(500).json({ message: error.message })
@@ -45,7 +73,8 @@ const editBook = async (req, res) => {
 // @DELETE /api/admin/books/:id - Delete a book
 const deleteBook = async (req, res) => {
   try {
-    await Book.findByIdAndDelete(req.params.id)
+    const deleted = await Book.findByIdAndDelete(req.params.id)
+    if (deleted) await dropCover(deleted.coverImage)
     await BookPage.deleteMany({ book: req.params.id })
     res.json({ message: 'Book deleted' })
   } catch (error) {
@@ -170,4 +199,4 @@ const deleteReview = async (req, res) => {
   }
 }
 
-module.exports = { addBook, editBook, deleteBook, getAllBooks, getAllUsers, getSales, searchGutenberg, importGutenberg, deleteReview, uploadBook, addGutenbergBook }
+module.exports = { addBook, editBook, deleteBook, getAllBooks, getAllUsers, getSales, searchGutenberg, importGutenberg, deleteReview, uploadBook, addGutenbergBook, uploadCover }

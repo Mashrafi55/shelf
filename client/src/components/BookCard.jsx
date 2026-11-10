@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import useAuthStore from '../store/authStore'
 import useFavouritesStore from '../store/favouritesStore'
 import { useTheme } from '../context/ThemeContext'
-import { ACCENT, ACCENT_DARK, COLORS } from '../constants'
+import { ACCENT, ACCENT_DARK, COLORS, coverSrc } from '../constants'
 
 export default function BookCard({ book }) {
   const { darkMode } = useTheme()
@@ -57,7 +57,7 @@ export default function BookCard({ book }) {
             <Heart size={16} fill={favourited ? '#e06666' : 'none'} color={favourited ? '#e06666' : '#fff'} />
           </button>
           {showCover ? (
-            <img src={book.coverImage} alt={book.title} loading="lazy"
+            <img src={coverSrc(book.coverImage)} alt={book.title} loading="lazy"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               onError={() => setCoverFailed(true)} />
           ) : (

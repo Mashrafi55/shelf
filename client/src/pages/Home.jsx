@@ -5,7 +5,7 @@ import { useTheme } from '../context/ThemeContext'
 import useAuthStore from '../store/authStore'
 import useWindowSize from '../hooks/useWindowSize'
 import useGridColumns from '../hooks/useGridColumns'
-import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
+import { API, ACCENT, ACCENT_DARK, COLORS, coverSrc } from '../constants'
 import BookCard from '../components/BookCard'
 
 function Section({ title, books }) {
@@ -48,7 +48,7 @@ function ContinueReading({ item }) {
         borderRadius: '12px', padding: '16px', maxWidth: '520px',
       }}>
         <div style={{ width: '64px', aspectRatio: '2/3', borderRadius: '6px', overflow: 'hidden', backgroundColor: colors.border, flexShrink: 0 }}>
-          {book.coverImage && <img src={book.coverImage} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+          {book.coverImage && <img src={coverSrc(book.coverImage)} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
         </div>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontFamily: 'Newsreader, serif', fontSize: '20px', color: colors.text, marginBottom: '4px' }}>{book.title}</div>
