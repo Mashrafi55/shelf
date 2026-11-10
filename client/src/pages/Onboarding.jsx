@@ -45,7 +45,7 @@ function Onboarding() {
   return (
     <div style={{
       backgroundColor: colors.bg, minHeight: '100vh',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px 16px',
     }}>
       <div style={{ maxWidth: '640px', width: '100%' }}>
         <div style={{ textAlign: 'center', marginBottom: '48px' }}>
@@ -54,7 +54,7 @@ function Onboarding() {
             letterSpacing: '0.1em', color: accent, fontWeight: '600', marginBottom: '16px',
           }}>Welcome to Shelf</p>
           <h1 style={{
-            fontFamily: 'Newsreader, serif', fontSize: '40px',
+            fontFamily: 'Newsreader, serif', fontSize: 'clamp(28px, 7vw, 40px)',
             color: colors.text, fontWeight: '400', lineHeight: '1.2', marginBottom: '12px',
           }}>What do you love to read?</h1>
           <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '15px', color: colors.muted, lineHeight: '1.7' }}>
@@ -62,7 +62,7 @@ function Onboarding() {
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '32px' }}>
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '32px' }}>
           <button onClick={selectAll} style={{
             background: 'none', border: `1px solid ${colors.border}`, borderRadius: '999px',
             padding: '6px 16px', fontFamily: 'Manrope, sans-serif', fontSize: '12px',

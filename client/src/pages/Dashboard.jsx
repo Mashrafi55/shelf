@@ -5,11 +5,13 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
 import useAuthStore from '../store/authStore'
+import useWindowSize from '../hooks/useWindowSize'
 import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
 
 function Dashboard() {
   const { darkMode } = useTheme()
   const { user } = useAuthStore()
+  const { isMobile } = useWindowSize()
   const [tab, setTab] = useState('library')
   const [library, setLibrary] = useState([])
   const [favourites, setFavourites] = useState([])
@@ -71,14 +73,14 @@ function Dashboard() {
 
   return (
     <div style={{ backgroundColor: colors.bg, minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '40px 24px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: isMobile ? '24px 16px' : '40px 24px' }}>
 
-        <div style={{ marginBottom: '48px' }}>
+        <div style={{ marginBottom: isMobile ? '28px' : '48px' }}>
           <p style={{
             fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase',
             letterSpacing: '0.1em', color: accent, fontWeight: '600', marginBottom: '8px',
           }}>My Account</p>
-          <h1 style={{ fontFamily: 'Newsreader, serif', fontSize: '40px', color: colors.text, fontWeight: '400' }}>
+          <h1 style={{ fontFamily: 'Newsreader, serif', fontSize: isMobile ? '30px' : '40px', color: colors.text, fontWeight: '400' }}>
             Welcome back, {user?.name?.split(' ')[0]}.
           </h1>
           <Link to="/profile" style={{
@@ -89,9 +91,9 @@ function Dashboard() {
 
         {currentlyReading?.book && (
           <div style={{
-            backgroundColor: colors.card, borderRadius: '16px', padding: '24px',
-            border: `1px solid ${colors.border}`, marginBottom: '48px',
-            display: 'flex', alignItems: 'center', gap: '24px',
+            backgroundColor: colors.card, borderRadius: '16px', padding: isMobile ? '16px' : '24px',
+            border: `1px solid ${colors.border}`, marginBottom: isMobile ? '28px' : '48px',
+            display: 'flex', alignItems: 'center', gap: isMobile ? '16px' : '24px', flexWrap: 'wrap',
           }}>
             <div style={{
               width: '60px', height: '90px', borderRadius: '8px',
@@ -100,7 +102,7 @@ function Dashboard() {
               <img src={currentlyReading.book.coverImage} alt={currentlyReading.book.title}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: '1 1 160px', minWidth: 0 }}>
               <p style={{
                 fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase',
                 letterSpacing: '0.08em', color: accent, fontWeight: '600', marginBottom: '4px',
@@ -120,18 +122,18 @@ function Dashboard() {
             </div>
             <Link to={`/read/${currentlyReading.book._id}`} style={{
               backgroundColor: accent, color: colors.bg, textDecoration: 'none',
-              padding: '10px 20px', borderRadius: '999px', fontFamily: 'Manrope, sans-serif',
+              padding: '12px 20px', borderRadius: '999px', fontFamily: 'Manrope, sans-serif',
               fontSize: '12px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700',
               display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0,
             }}>Continue <ArrowRight size={14} /></Link>
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '40px', borderBottom: `1px solid ${colors.border}` }}>
+        <div style={{ display: 'flex', gap: '4px', marginBottom: isMobile ? '24px' : '40px', borderBottom: `1px solid ${colors.border}`, overflowX: 'auto' }}>
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
               display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '12px 20px', background: 'none', border: 'none',
+              padding: '12px 16px', minHeight: '44px', whiteSpace: 'nowrap', background: 'none', border: 'none',
               borderBottom: tab === t.id ? `2px solid ${accent}` : '2px solid transparent',
               marginBottom: '-1px', cursor: 'pointer',
               fontFamily: 'Manrope, sans-serif', fontSize: '13px',
@@ -144,7 +146,7 @@ function Dashboard() {
 
         {tab === 'library' && (
           library.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '80px' }}>
+            <div style={{ textAlign: 'center', padding: isMobile ? '48px 8px' : '80px' }}>
               <p style={{ fontFamily: 'Newsreader, serif', fontSize: '24px', color: colors.muted, fontStyle: 'italic', marginBottom: '16px' }}>
                 Your library is empty.
               </p>
@@ -153,7 +155,7 @@ function Dashboard() {
               </Link>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? '16px' : '24px' }}>
               {library.map(({ book }) => (
                 <Link key={book._id} to={`/read/${book._id}`} style={{ textDecoration: 'none' }}>
                   <div style={{ backgroundColor: colors.card, borderRadius: '12px', overflow: 'hidden', border: `1px solid ${colors.border}` }}>
@@ -173,7 +175,7 @@ function Dashboard() {
 
         {tab === 'favourites' && (
           favourites.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '80px' }}>
+            <div style={{ textAlign: 'center', padding: isMobile ? '48px 8px' : '80px' }}>
               <p style={{ fontFamily: 'Newsreader, serif', fontSize: '24px', color: colors.muted, fontStyle: 'italic', marginBottom: '16px' }}>
                 No favourites yet.
               </p>
@@ -182,7 +184,7 @@ function Dashboard() {
               </Link>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? '16px' : '24px' }}>
               {favourites.map(({ book }) => (
                 <Link key={book._id} to={`/book/${book._id}`} style={{ textDecoration: 'none' }}>
                   <div style={{ backgroundColor: colors.card, borderRadius: '12px', overflow: 'hidden', border: `1px solid ${colors.border}` }}>
@@ -202,7 +204,7 @@ function Dashboard() {
 
         {tab === 'bookmarks' && (
           bookmarks.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '80px' }}>
+            <div style={{ textAlign: 'center', padding: isMobile ? '48px 8px' : '80px' }}>
               <p style={{ fontFamily: 'Newsreader, serif', fontSize: '24px', color: colors.muted, fontStyle: 'italic' }}>
                 No bookmarks yet.
               </p>
@@ -211,8 +213,8 @@ function Dashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {bookmarks.map(bookmark => (
                 <div key={bookmark._id} style={{
-                  backgroundColor: colors.card, borderRadius: '12px', padding: '20px 24px',
-                  border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  backgroundColor: colors.card, borderRadius: '12px', padding: isMobile ? '16px' : '20px 24px',
+                  border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <Bookmark size={18} color={accent} />

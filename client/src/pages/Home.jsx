@@ -3,24 +3,26 @@ import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { useTheme } from '../context/ThemeContext'
 import useAuthStore from '../store/authStore'
+import useWindowSize from '../hooks/useWindowSize'
 import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
 import BookCard from '../components/BookCard'
 
 function Section({ title, books }) {
   const { darkMode } = useTheme()
+  const { isMobile } = useWindowSize()
   const colors = COLORS[darkMode ? 'dark' : 'light']
   const accent = darkMode ? ACCENT_DARK : ACCENT
 
   return (
-    <section style={{ marginBottom: '64px' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '24px' }}>
-        <h2 style={{ fontFamily: 'Newsreader, serif', fontSize: '32px', color: colors.text, fontWeight: '400' }}>{title}</h2>
+    <section style={{ marginBottom: isMobile ? '40px' : '64px' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '20px' }}>
+        <h2 style={{ fontFamily: 'Newsreader, serif', fontSize: isMobile ? '26px' : '32px', color: colors.text, fontWeight: '400' }}>{title}</h2>
         <Link to="/browse" style={{
           fontFamily: 'Manrope, sans-serif', fontSize: '12px', textTransform: 'uppercase',
           letterSpacing: '0.05em', color: accent, textDecoration: 'none', fontWeight: '600',
         }}>View all →</Link>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(160px, 1fr))', gap: isMobile ? '16px' : '24px' }}>
         {books.map(book => <BookCard key={book._id} book={book} />)}
       </div>
     </section>
@@ -77,9 +79,10 @@ function GenreChips({ genres }) {
 
 function Skeletons() {
   const { darkMode } = useTheme()
+  const { isMobile } = useWindowSize()
   const colors = COLORS[darkMode ? 'dark' : 'light']
   return (
-    <div aria-label="Loading books" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '24px' }}>
+    <div aria-label="Loading books" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(160px, 1fr))', gap: isMobile ? '16px' : '24px' }}>
       {Array.from({ length: 6 }, (_, i) => (
         <div key={i} style={{ borderRadius: '12px', border: `1px solid ${colors.border}`, overflow: 'hidden', backgroundColor: colors.card }}>
           <div style={{ aspectRatio: '2/3', backgroundColor: colors.border, opacity: 0.5 }} />
@@ -95,6 +98,7 @@ function Skeletons() {
 
 function Home() {
   const { darkMode } = useTheme()
+  const { isMobile } = useWindowSize()
   const { user } = useAuthStore()
   const [popular, setPopular] = useState([])
   const [topRated, setTopRated] = useState([])
@@ -145,8 +149,8 @@ function Home() {
   return (
     <div style={{ backgroundColor: colors.bg, minHeight: '100vh' }}>
       <div style={{
-        maxWidth: '1280px', margin: '0 auto', padding: '80px 24px 48px',
-        borderBottom: `1px solid ${colors.border}`, marginBottom: '64px',
+        maxWidth: '1280px', margin: '0 auto', padding: isMobile ? '40px 16px 32px' : '80px 24px 48px',
+        borderBottom: `1px solid ${colors.border}`, marginBottom: isMobile ? '40px' : '64px',
       }}>
         <p style={{
           fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase',
@@ -166,22 +170,22 @@ function Home() {
         }}>
           Browse thousands of books, preview before you buy, and read instantly in your browser.
         </p>
-        <div style={{ display: 'flex', gap: '16px' }}>
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
           <Link to={user ? '/dashboard' : '/register'} style={{
             backgroundColor: accent, color: colors.bg, textDecoration: 'none',
-            padding: '12px 28px', borderRadius: '999px', fontFamily: 'Manrope, sans-serif',
+            padding: '14px 28px', borderRadius: '999px', fontFamily: 'Manrope, sans-serif',
             fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700',
           }}>{user ? 'My Library' : 'Start Reading'}</Link>
           <Link to="/browse" style={{
             backgroundColor: 'transparent', color: colors.text, textDecoration: 'none',
-            padding: '12px 28px', borderRadius: '999px', fontFamily: 'Manrope, sans-serif',
+            padding: '14px 28px', borderRadius: '999px', fontFamily: 'Manrope, sans-serif',
             fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700',
             border: `1px solid ${colors.border}`,
           }}>Browse Books</Link>
         </div>
       </div>
 
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: isMobile ? '0 16px' : '0 24px' }}>
         {loading ? (
           <Skeletons />
         ) : (

@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
 import useAuthStore from '../store/authStore'
 import { API, ACCENT, ACCENT_DARK, COLORS, GENRES } from '../constants'
+import useWindowSize from '../hooks/useWindowSize'
 
 // fetches everything the admin dashboard shows (no React state in here)
 const requestAdminData = async (token) => {
@@ -22,6 +23,7 @@ function Admin() {
   const { darkMode } = useTheme()
   const { user } = useAuthStore()
   const navigate = useNavigate()
+  const { isMobile } = useWindowSize()
   const [tab, setTab] = useState('books')
   const [books, setBooks] = useState([])
   const [users, setUsers] = useState([])
@@ -239,19 +241,19 @@ function Admin() {
 
   return (
     <div style={{ backgroundColor: colors.bg, minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '40px 24px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: isMobile ? '24px 16px' : '40px 24px' }}>
 
-        <div style={{ marginBottom: '48px' }}>
+        <div style={{ marginBottom: isMobile ? '28px' : '48px' }}>
           <p style={{
             fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase',
             letterSpacing: '0.1em', color: accent, fontWeight: '600', marginBottom: '8px',
           }}>Admin Panel</p>
-          <h1 style={{ fontFamily: 'Newsreader, serif', fontSize: '40px', color: colors.text, fontWeight: '400' }}>
+          <h1 style={{ fontFamily: 'Newsreader, serif', fontSize: isMobile ? '30px' : '40px', color: colors.text, fontWeight: '400' }}>
             Shelf Dashboard
           </h1>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginBottom: '48px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? '12px' : '24px', marginBottom: isMobile ? '28px' : '48px' }}>
           {[
             { label: 'Total Books', value: books.length, icon: <BookOpen size={20} /> },
             { label: 'Total Users', value: users.length, icon: <Users size={20} /> },
@@ -259,7 +261,7 @@ function Admin() {
           ].map(stat => (
             <div key={stat.label} style={{
               backgroundColor: colors.card, borderRadius: '12px',
-              padding: '24px', border: `1px solid ${colors.border}`,
+              padding: isMobile ? '16px' : '24px', border: `1px solid ${colors.border}`,
               display: 'flex', alignItems: 'center', gap: '16px',
             }}>
               <div style={{ color: accent }}>{stat.icon}</div>
@@ -271,10 +273,10 @@ function Admin() {
           ))}
         </div>
 
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '32px', borderBottom: `1px solid ${colors.border}` }}>
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: `1px solid ${colors.border}`, overflowX: 'auto' }}>
           {['books', 'users', 'sales'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
-              padding: '12px 20px', background: 'none', border: 'none',
+              padding: '12px 20px', minHeight: '44px', background: 'none', border: 'none',
               borderBottom: tab === t ? `2px solid ${accent}` : '2px solid transparent',
               marginBottom: '-1px', cursor: 'pointer',
               fontFamily: 'Manrope, sans-serif', fontSize: '13px',
@@ -287,22 +289,22 @@ function Admin() {
 
         {tab === 'books' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: isMobile ? 'stretch' : 'flex-end', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
               <button onClick={openImport} style={{
                 backgroundColor: 'transparent', color: accent, border: `1px solid ${accent}`,
-                padding: '10px 20px', borderRadius: '999px', cursor: 'pointer',
+                padding: '12px 20px', borderRadius: '999px', cursor: 'pointer',
                 fontFamily: 'Manrope, sans-serif', fontSize: '13px',
                 textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700',
-                display: 'flex', alignItems: 'center', gap: '8px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flex: isMobile ? '1 1 100%' : 'none',
               }}>
                 <Download size={16} /> Import from Gutenberg
               </button>
               <button onClick={openAdd} style={{
                 backgroundColor: accent, color: colors.bg, border: 'none',
-                padding: '10px 20px', borderRadius: '999px', cursor: 'pointer',
+                padding: '12px 20px', borderRadius: '999px', cursor: 'pointer',
                 fontFamily: 'Manrope, sans-serif', fontSize: '13px',
                 textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700',
-                display: 'flex', alignItems: 'center', gap: '8px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flex: isMobile ? '1 1 100%' : 'none',
               }}>
                 <Plus size={16} /> Add Book
               </button>
@@ -311,24 +313,24 @@ function Admin() {
               {books.map(book => (
                 <div key={book._id} style={{
                   backgroundColor: colors.card, borderRadius: '12px',
-                  padding: '16px 20px', border: `1px solid ${colors.border}`,
-                  display: 'flex', alignItems: 'center', gap: '16px',
+                  padding: '16px', border: `1px solid ${colors.border}`,
+                  display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap',
                 }}>
                   <div style={{ width: '40px', height: '60px', borderRadius: '4px', overflow: 'hidden', backgroundColor: colors.border, flexShrink: 0 }}>
                     <img src={book.coverImage} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: '1 1 160px', minWidth: 0 }}>
                     <p style={{ fontFamily: 'Newsreader, serif', fontSize: '18px', color: colors.text }}>{book.title}</p>
                     <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted }}>{book.author} · {book.genre} · {book.isFree ? 'Free' : `$${book.price}`} · {book.bookType === 'gutenberg' ? '⚡ on-demand' : ''} {book.totalPages || book.pages.length} pages</p>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => openEdit(book)} style={{
                       background: 'none', border: `1px solid ${colors.border}`, borderRadius: '8px',
-                      padding: '8px', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center',
+                      padding: '12px', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center',
                     }}><Edit size={14} /></button>
                     <button onClick={() => handleDelete(book._id)} style={{
                       background: 'none', border: '1px solid #8b3a3a', borderRadius: '8px',
-                      padding: '8px', cursor: 'pointer', color: '#8b3a3a', display: 'flex', alignItems: 'center',
+                      padding: '12px', cursor: 'pointer', color: '#8b3a3a', display: 'flex', alignItems: 'center',
                     }}><Trash2 size={14} /></button>
                   </div>
                 </div>
@@ -347,19 +349,19 @@ function Admin() {
             {users.map(u => (
               <div key={u._id} style={{
                 backgroundColor: colors.card, borderRadius: '12px',
-                padding: '16px 20px', border: `1px solid ${colors.border}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '16px', border: `1px solid ${colors.border}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 16px',
               }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
                   <div style={{
-                    width: '36px', height: '36px', borderRadius: '50%',
+                    flexShrink: 0, width: '36px', height: '36px', borderRadius: '50%',
                     backgroundColor: accent, display: 'flex', alignItems: 'center',
                     justifyContent: 'center', color: colors.bg,
                     fontFamily: 'Manrope, sans-serif', fontSize: '14px', fontWeight: '700',
                   }}>{u.name?.[0]?.toUpperCase()}</div>
                   <div>
                     <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '14px', color: colors.text, fontWeight: '600' }}>{u.name}</p>
-                    <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted }}>{u.email}</p>
+                    <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted, overflowWrap: 'anywhere' }}>{u.email}</p>
                   </div>
                 </div>
                 <span style={{
@@ -376,8 +378,8 @@ function Admin() {
             {sales.map(sale => (
               <div key={sale._id} style={{
                 backgroundColor: colors.card, borderRadius: '12px',
-                padding: '16px 20px', border: `1px solid ${colors.border}`,
-                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '16px', border: `1px solid ${colors.border}`,
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px 16px',
               }}>
                 <div>
                   <p style={{ fontFamily: 'Newsreader, serif', fontSize: '18px', color: colors.text }}>{sale.book?.title}</p>
@@ -399,10 +401,10 @@ function Admin() {
         <div style={{
           position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)',
           zIndex: 100, display: 'flex', alignItems: 'flex-start',
-          justifyContent: 'center', padding: '24px', overflowY: 'auto',
+          justifyContent: 'center', padding: isMobile ? '12px' : '24px', overflowY: 'auto',
         }}>
           <div style={{
-            backgroundColor: colors.bg, borderRadius: '16px', padding: '40px',
+            backgroundColor: colors.bg, borderRadius: '16px', padding: isMobile ? '24px 18px' : '40px',
             width: '100%', maxWidth: '560px', border: `1px solid ${colors.border}`, margin: 'auto',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
@@ -499,10 +501,10 @@ function Admin() {
         <div style={{
           position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)',
           zIndex: 100, display: 'flex', alignItems: 'flex-start',
-          justifyContent: 'center', padding: '24px', overflowY: 'auto',
+          justifyContent: 'center', padding: isMobile ? '12px' : '24px', overflowY: 'auto',
         }}>
           <div style={{
-            backgroundColor: colors.bg, borderRadius: '16px', padding: '40px',
+            backgroundColor: colors.bg, borderRadius: '16px', padding: isMobile ? '24px 18px' : '40px',
             width: '100%', maxWidth: '680px', border: `1px solid ${colors.border}`, margin: 'auto',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
@@ -610,7 +612,7 @@ function Admin() {
                           }}><X size={14} /></button>
                         )}
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr', gap: '12px', marginBottom: '10px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '110px 1fr', gap: '12px', marginBottom: '10px' }}>
                         <input value={page.chapterNumber || ''} onChange={e => handlePageChange(index, 'chapterNumber', e.target.value)}
                           style={chapterInputStyle} placeholder="Ch. # (I, 1...)" />
                         <input value={page.chapterTitle || ''} onChange={e => handlePageChange(index, 'chapterTitle', e.target.value)}

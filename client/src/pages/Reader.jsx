@@ -154,7 +154,7 @@ function Reader() {
         backdropFilter: 'blur(12px)', borderBottom: `1px solid ${colors.border}`,
       }}>
         <div style={{
-          maxWidth: '800px', margin: '0 auto', padding: '12px 24px',
+          maxWidth: '800px', margin: '0 auto', padding: isMobile ? '10px 16px' : '12px 24px', gap: '12px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <Link to={`/book/${id}`} style={{
@@ -163,9 +163,9 @@ function Reader() {
           }}>
             <ArrowLeft size={16} /> Back
           </Link>
-          <div style={{ textAlign: 'center' }}>
-            <p style={{ fontFamily: 'Newsreader, serif', fontSize: '14px', color: colors.text, fontStyle: 'italic' }}>{book.title}</p>
-            <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '11px', color: colors.muted }}>{book.author}</p>
+          <div style={{ textAlign: 'center', minWidth: 0, flex: 1 }}>
+            <p style={{ fontFamily: 'Newsreader, serif', fontSize: '14px', color: colors.text, fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{book.title}</p>
+            <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '11px', color: colors.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{book.author}</p>
           </div>
           <button onClick={handleBookmark} style={{
             background: 'none', border: 'none', cursor: 'pointer',
@@ -179,7 +179,7 @@ function Reader() {
         </div>
       </header>
 
-      <main onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{ flex: 1, maxWidth: '680px', margin: '0 auto', padding: '100px 24px calc(120px + env(safe-area-inset-bottom))', width: '100%' }}>
+      <main onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{ flex: 1, maxWidth: '680px', margin: '0 auto', padding: isMobile ? '84px 20px calc(110px + env(safe-area-inset-bottom))' : '100px 24px calc(120px + env(safe-area-inset-bottom))', width: '100%' }}>
         {isLocked ? (
           <div style={{ textAlign: 'center', padding: '80px 24px' }}>
             <BookOpen size={48} color={colors.muted} style={{ marginBottom: '24px' }} />
@@ -232,7 +232,7 @@ function Reader() {
         )}
       </main>
 
-      {!isLocked && (
+      {!isLocked && !isMobile && (
         <>
           <button onClick={prevPage} disabled={currentPage === 0} style={{
             position: 'fixed', left: '24px', top: '50%', transform: 'translateY(-50%)',
@@ -258,25 +258,40 @@ function Reader() {
       <div style={{
         position: 'fixed', bottom: 'calc(32px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)',
         backgroundColor: colors.card, border: `1px solid ${colors.border}`,
-        borderRadius: '999px', padding: '10px 24px',
-        display: 'flex', alignItems: 'center', gap: '24px',
+        borderRadius: '999px', padding: isMobile ? '6px 12px' : '10px 24px',
+        display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '24px',
+        maxWidth: 'calc(100vw - 24px)',
         boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
       }}>
+        {isMobile && !isLocked && (
+          <button onClick={prevPage} disabled={currentPage === 0} aria-label="Previous page" style={{
+            background: 'none', border: 'none', color: colors.text, minWidth: '44px', height: '44px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            opacity: currentPage === 0 ? 0.3 : 1,
+          }}><ArrowLeft size={18} /></button>
+        )}
         <button onClick={() => setFontSize(s => Math.max(14, s - 2))} style={{
           background: 'none', border: 'none', cursor: 'pointer', color: colors.muted,
-          fontFamily: 'Newsreader, serif', fontSize: '16px',
+          fontFamily: 'Newsreader, serif', fontSize: '16px', minWidth: isMobile ? '40px' : 'auto', height: isMobile ? '44px' : 'auto',
         }}>A-</button>
         <button onClick={() => setFontSize(s => Math.min(28, s + 2))} style={{
           background: 'none', border: 'none', cursor: 'pointer', color: colors.muted,
-          fontFamily: 'Newsreader, serif', fontSize: '22px',
+          fontFamily: 'Newsreader, serif', fontSize: '22px', minWidth: isMobile ? '40px' : 'auto', height: isMobile ? '44px' : 'auto',
         }}>A+</button>
         <div style={{ width: '1px', height: '20px', backgroundColor: colors.border }} />
-        <button onClick={toggleDarkMode} style={{
+        <button onClick={toggleDarkMode} aria-label="Toggle dark mode" style={{
           background: 'none', border: 'none', cursor: 'pointer', color: colors.muted,
-          display: 'flex', alignItems: 'center',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: isMobile ? '40px' : 'auto', height: isMobile ? '44px' : 'auto',
         }}>
           {darkMode ? <Sun size={18} /> : <Moon size={18} />}
         </button>
+        {isMobile && !isLocked && (
+          <button onClick={nextPage} disabled={currentPage === totalPages - 1} aria-label="Next page" style={{
+            background: 'none', border: 'none', color: colors.text, minWidth: '44px', height: '44px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            opacity: currentPage === totalPages - 1 ? 0.3 : 1,
+          }}><ArrowRight size={18} /></button>
+        )}
       </div>
     </div>
   )

@@ -103,14 +103,14 @@ function Navbar() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <button onClick={toggleDarkMode} style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              color: colors.text, display: 'flex', alignItems: 'center',
-            }}>
+              color: colors.text, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', height: '44px',
+            }} aria-label="Toggle dark mode">
               {darkMode ? <Sun size={18} /> : <Moon size={18} />}
             </button>
             <button onClick={() => setMenuOpen(!menuOpen)} style={{
               background: 'none', border: 'none', cursor: 'pointer',
-              color: colors.text, display: 'flex', alignItems: 'center',
-            }}>
+              color: colors.text, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', height: '44px',
+            }} aria-label="Menu">
               {menuOpen ? <X size={22} /> : <Menu size={22} />}
             </button>
           </div>
@@ -121,11 +121,11 @@ function Navbar() {
       {isMobile && menuOpen && (
         <div style={{
           backgroundColor: colors.bg, borderTop: `1px solid ${colors.border}`,
-          padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px',
+          padding: '16px 24px 24px', display: 'flex', flexDirection: 'column', gap: '4px',
         }}>
           <Link to="/browse" onClick={() => setMenuOpen(false)} style={{
             fontFamily: 'Manrope, sans-serif', fontSize: '14px',
-            textTransform: 'uppercase', letterSpacing: '0.05em',
+            textTransform: 'uppercase', letterSpacing: '0.05em', padding: '12px 0',
             color: colors.text, textDecoration: 'none', fontWeight: '600',
           }}>Browse</Link>
 
@@ -134,13 +134,13 @@ function Navbar() {
               {user.role === 'admin' && (
                 <Link to="/admin" onClick={() => setMenuOpen(false)} style={{
                   fontFamily: 'Manrope, sans-serif', fontSize: '14px',
-                  textTransform: 'uppercase', letterSpacing: '0.05em',
+                  textTransform: 'uppercase', letterSpacing: '0.05em', padding: '12px 0',
                   color: colors.text, textDecoration: 'none', fontWeight: '600',
                 }}>Admin</Link>
               )}
               <Link to="/dashboard" onClick={() => setMenuOpen(false)} style={{
                 fontFamily: 'Manrope, sans-serif', fontSize: '14px',
-                textTransform: 'uppercase', letterSpacing: '0.05em',
+                textTransform: 'uppercase', letterSpacing: '0.05em', padding: '12px 0',
                 color: colors.text, textDecoration: 'none', fontWeight: '600',
                 display: 'flex', alignItems: 'center', gap: '8px',
               }}>
@@ -149,7 +149,7 @@ function Navbar() {
               <button onClick={handleLogout} style={{
                 background: 'none', border: 'none', cursor: 'pointer',
                 color: colors.muted, fontFamily: 'Manrope, sans-serif',
-                fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em',
+                fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.05em', padding: '12px 0',
                 textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px',
               }}>
                 <LogOut size={16} /> Logout
@@ -159,7 +159,7 @@ function Navbar() {
             <>
               <Link to="/login" onClick={() => setMenuOpen(false)} style={{
                 fontFamily: 'Manrope, sans-serif', fontSize: '14px',
-                textTransform: 'uppercase', letterSpacing: '0.05em',
+                textTransform: 'uppercase', letterSpacing: '0.05em', padding: '12px 0',
                 color: colors.text, textDecoration: 'none', fontWeight: '600',
               }}>Login</Link>
               <Link to="/register" onClick={() => setMenuOpen(false)} style={{

@@ -7,10 +7,10 @@ function AuthCard({ title, children }) {
   return (
     <div style={{
       minHeight: '100vh', backgroundColor: colors.bg,
-      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
+      display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px',
     }}>
       <div style={{
-        backgroundColor: colors.card, borderRadius: '16px', padding: '48px',
+        backgroundColor: colors.card, borderRadius: '16px', padding: 'clamp(24px, 6vw, 48px)',
         width: '100%', maxWidth: '440px', boxShadow: '0 40px 80px rgba(0,0,0,0.08)',
       }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>

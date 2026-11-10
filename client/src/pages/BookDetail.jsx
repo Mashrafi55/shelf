@@ -75,24 +75,25 @@ function BookDetail() {
 
   return (
     <div style={{ backgroundColor: colors.bg, minHeight: '100vh' }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 24px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: isMobile ? '20px 16px' : '32px 24px' }}>
 
         <Link to="/" style={{
           display: 'inline-flex', alignItems: 'center', gap: '8px',
           fontFamily: 'Manrope, sans-serif', fontSize: '13px',
-          color: colors.muted, textDecoration: 'none', marginBottom: '40px',
+          color: colors.muted, textDecoration: 'none', marginBottom: isMobile ? '20px' : '40px',
           textTransform: 'uppercase', letterSpacing: '0.05em',
         }}>
           <ArrowLeft size={16} /> Back
         </Link>
 
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', gap: isMobile ? '32px' : '64px', marginBottom: '64px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', gap: isMobile ? '32px' : '64px', marginBottom: isMobile ? '40px' : '64px' }}>
 
           {/* Left — Cover + CTA */}
           <div>
             <div style={{
               aspectRatio: '2/3', borderRadius: '12px', overflow: 'hidden',
               backgroundColor: colors.border, marginBottom: '24px',
+              maxWidth: isMobile ? '240px' : 'none', marginLeft: isMobile ? 'auto' : 0, marginRight: isMobile ? 'auto' : 0,
               boxShadow: '0 24px 48px rgba(0,0,0,0.15)',
             }}>
               <img src={book.coverImage} alt={book.title}

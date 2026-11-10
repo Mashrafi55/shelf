@@ -106,8 +106,8 @@ function Browse() {
           <p style={{ fontFamily: font, color: colors.muted }}>No books match your search.</p>
         ) : (
           <div style={{
-            display: 'grid', gap: '24px',
-            gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '150px' : '200px'}, 1fr))`,
+            display: 'grid', gap: isMobile ? '16px' : '24px',
+            gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '130px' : '200px'}, 1fr))`,
           }}>
             {data.books.map(book => <BookCard key={book._id} book={book} />)}
           </div>
