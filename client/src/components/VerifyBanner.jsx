@@ -28,8 +28,7 @@ function VerifyBanner() {
 
   return (
     <div style={{
-      position: 'fixed', top: '64px', left: 0, right: 0, zIndex: 40, textAlign: 'center',
-      padding: '8px 16px', backgroundColor: colors.card, borderBottom: `1px solid ${colors.border}`,
+      textAlign: 'center', padding: '8px 16px', backgroundColor: colors.card, borderBottom: `1px solid ${colors.border}`,
       fontFamily: 'Manrope, sans-serif', fontSize: '13px', color: colors.text,
     }}>
       Please verify your email address — check your inbox.{' '}

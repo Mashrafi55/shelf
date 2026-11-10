@@ -20,8 +20,8 @@ function App() {
   return (
     <>
       <Navbar />
-      <VerifyBanner />
       <main style={{ paddingTop: '64px' }}>
+        <VerifyBanner />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/browse" element={<Browse />} />
