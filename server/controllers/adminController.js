@@ -107,6 +107,23 @@ const importGutenberg = async (req, res) => {
   }
 }
 
+// @POST /api/admin/gutenberg/add/:id - Import one Gutenberg book straight into the catalogue (free, published)
+// Used by the bulk "paste IDs" importer, which calls it once per id so no single request runs long.
+const addGutenbergBook = async (req, res) => {
+  try {
+    const id = String(req.params.id)
+    if (!/^\d{1,8}$/.test(id)) return res.status(400).json({ message: 'Invalid Gutenberg id' })
+    const existing = await Book.findOne({ gutenbergId: id }).select('title')
+    if (existing) return res.status(409).json({ message: 'Already in the catalogue', title: existing.title })
+    const { pages, ...data } = await getGutenbergBook(id)
+    const book = await Book.create({ ...data, price: 0, isFree: true, pages: [] })
+    res.status(201).json({ title: book.title, author: book.author, totalPages: book.totalPages })
+  } catch (error) {
+    const notFound = /not found/i.test(error.message)
+    res.status(notFound ? 404 : 502).json({ message: error.message })
+  }
+}
+
 // @POST /api/admin/books/upload - Turn an uploaded PDF / EPUB / TXT into a draft book
 // The book is saved unpublished with a generated cover: the admin finishes the details in the edit form.
 const uploadBook = async (req, res) => {
@@ -153,4 +170,4 @@ const deleteReview = async (req, res) => {
   }
 }
 
-module.exports = { addBook, editBook, deleteBook, getAllBooks, getAllUsers, getSales, searchGutenberg, importGutenberg, deleteReview, uploadBook }
+module.exports = { addBook, editBook, deleteBook, getAllBooks, getAllUsers, getSales, searchGutenberg, importGutenberg, deleteReview, uploadBook, addGutenbergBook }

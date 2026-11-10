@@ -34,6 +34,9 @@ function Admin() {
   const [genreOpen, setGenreOpen] = useState(false)
   const [showImport, setShowImport] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [bulkText, setBulkText] = useState('')
+  const [bulkRunning, setBulkRunning] = useState(false)
+  const [bulkResults, setBulkResults] = useState([])
   const fileInputRef = useRef(null)
   const [importQuery, setImportQuery] = useState('')
   const [importResults, setImportResults] = useState([])
@@ -186,6 +189,27 @@ function Admin() {
     } finally {
       setUploading(false)
     }
+  }
+
+  // paste Gutenberg ids or links (one per line / comma separated) and add them one after another
+  const handleBulkImport = async () => {
+    const ids = [...new Set((bulkText.match(/\d+/g) || []).filter(n => n.length <= 8))].slice(0, 50)
+    if (!ids.length) return toast.error('Paste at least one Gutenberg id or link')
+    setBulkRunning(true)
+    setBulkResults([])
+    for (const id of ids) {
+      let result
+      try {
+        const { data } = await axios.post(`${API}/admin/gutenberg/add/${id}`, {}, { headers })
+        result = { id, ok: true, text: `Added: ${data.title}` }
+      } catch (error) {
+        const data = error.response?.data
+        result = { id, ok: error.response?.status === 409, text: error.response?.status === 409 ? `Already have: ${data?.title}` : data?.message || 'Failed' }
+      }
+      setBulkResults(list => [...list, result])
+    }
+    setBulkRunning(false)
+    fetchAll()
   }
 
   const openImport = () => {
@@ -526,6 +550,35 @@ function Admin() {
                 <p style={{ textAlign: 'center', padding: '32px', fontFamily: 'Newsreader, serif', fontSize: '17px', color: colors.muted, fontStyle: 'italic' }}>
                   Searching Gutenberg...
                 </p>
+              )}
+            </div>
+
+            <div style={{ borderTop: `1px solid ${colors.border}`, marginTop: '24px', paddingTop: '20px' }}>
+              <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: accent, marginBottom: '8px' }}>
+                Add many at once
+              </p>
+              <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted, marginBottom: '10px', lineHeight: 1.6 }}>
+                Paste Gutenberg book numbers or links (up to 50). They are added as free, published books.
+              </p>
+              <textarea value={bulkText} onChange={e => setBulkText(e.target.value)} rows={3} disabled={bulkRunning}
+                placeholder={'84\n1342\nhttps://www.gutenberg.org/ebooks/11'}
+                style={{
+                  width: '100%', border: `1px solid ${colors.border}`, borderRadius: '8px', padding: '10px 12px',
+                  backgroundColor: colors.card, color: colors.text, fontFamily: 'Manrope, sans-serif', fontSize: '14px', outline: 'none', resize: 'vertical',
+                }} />
+              <button onClick={handleBulkImport} disabled={bulkRunning} style={{
+                marginTop: '10px', backgroundColor: accent, color: colors.bg, border: 'none', borderRadius: '999px',
+                padding: '12px 20px', cursor: bulkRunning ? 'wait' : 'pointer', opacity: bulkRunning ? 0.7 : 1,
+                fontFamily: 'Manrope, sans-serif', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+              }}>{bulkRunning ? `Adding... (${bulkResults.length})` : 'Add these books'}</button>
+              {bulkResults.length > 0 && (
+                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {bulkResults.map(r => (
+                    <p key={r.id} style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: r.ok ? '#4a7a4a' : '#b05a5a' }}>
+                      #{r.id} — {r.text}
+                    </p>
+                  ))}
+                </div>
               )}
             </div>
           </div>
