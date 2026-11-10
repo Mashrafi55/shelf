@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Edit, Trash2, Users, BookOpen, DollarSign, X, Download, Search, Loader2 } from 'lucide-react'
+import { Plus, Edit, Trash2, Users, BookOpen, DollarSign, X, Download, Search, Loader2, Upload } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
@@ -33,13 +33,15 @@ function Admin() {
   const [editingBook, setEditingBook] = useState(null)
   const [genreOpen, setGenreOpen] = useState(false)
   const [showImport, setShowImport] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const fileInputRef = useRef(null)
   const [importQuery, setImportQuery] = useState('')
   const [importResults, setImportResults] = useState([])
   const [importLoading, setImportLoading] = useState(false)
   const [importingId, setImportingId] = useState(null)
   const [form, setForm] = useState({
     title: '', author: '', description: '', coverImage: '',
-    genre: 'Fiction', price: '', isFree: false, freePreviewPages: 4,
+    genre: 'Fiction', price: '', isFree: false, freePreviewPages: 4, isPublished: true,
     bookType: 'custom', gutenbergId: '', totalPages: 0, frontPages: 0,
     pages: [{ pageNumber: 1, chapterNumber: '', chapterTitle: '', content: '' }]
   })
@@ -104,7 +106,7 @@ function Admin() {
     setEditingBook(null)
     setForm({
       title: '', author: '', description: '', coverImage: '',
-      genre: 'Fiction', price: '', isFree: false, freePreviewPages: 4,
+      genre: 'Fiction', price: '', isFree: false, freePreviewPages: 4, isPublished: true,
       bookType: 'custom', gutenbergId: '', totalPages: 0, frontPages: 0,
       pages: [{ pageNumber: 1, chapterNumber: '', chapterTitle: '', content: '' }]
     })
@@ -116,7 +118,7 @@ function Admin() {
     setForm({
       title: book.title, author: book.author, description: book.description,
       coverImage: book.coverImage, genre: book.genre, price: book.price,
-      isFree: book.isFree, freePreviewPages: book.freePreviewPages,
+      isFree: book.isFree, freePreviewPages: book.freePreviewPages, isPublished: book.isPublished !== false,
       bookType: book.bookType || 'custom',
       gutenbergId: book.gutenbergId || '',
       frontPages: book.frontPages || 0,
@@ -133,12 +135,12 @@ function Admin() {
       return toast.error('Please fill all required fields')
     }
     try {
-      const isGutenberg = form.bookType === 'gutenberg'
       const payload = {
         ...form,
         price: form.isFree ? 0 : Number(form.price),
-        // gutenberg books never store pages — they are fetched on demand
-        ...(isGutenberg ? {} : { pages: form.pages }),
+        // only hand-written books carry their pages in the form; gutenberg pages are fetched on demand
+        // and uploaded books keep theirs in the BookPage collection
+        ...(form.bookType === 'custom' ? { pages: form.pages } : {}),
       }
       if (editingBook) {
         await axios.put(`${API}/admin/books/${editingBook._id}`, payload, { headers })
@@ -162,6 +164,27 @@ function Admin() {
       setBooks(prev => prev.filter(b => b._id !== id))
     } catch {
       toast.error('Could not delete book')
+    }
+  }
+
+  // PDF / EPUB / TXT -> draft book, then open its edit form so the details can be finished
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0]
+    e.target.value = '' // allow choosing the same file again
+    if (!file) return
+    if (file.size > 25 * 1024 * 1024) return toast.error('File is too large (max 25 MB)')
+    setUploading(true)
+    try {
+      const body = new FormData()
+      body.append('file', file)
+      const { data } = await axios.post(`${API}/admin/books/upload`, body, { headers })
+      toast.success(`${data.pages} pages and ${data.chapters} chapters found. Finish the details, then publish.`)
+      await fetchAll()
+      openEdit(data.book)
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Could not import this file')
+    } finally {
+      setUploading(false)
     }
   }
 
@@ -290,6 +313,16 @@ function Admin() {
         {tab === 'books' && (
           <div>
             <div style={{ display: 'flex', justifyContent: isMobile ? 'stretch' : 'flex-end', flexWrap: 'wrap', gap: '12px', marginBottom: '24px' }}>
+              <input ref={fileInputRef} type="file" accept=".pdf,.epub,.txt" onChange={handleFileUpload} style={{ display: 'none' }} />
+              <button onClick={() => fileInputRef.current?.click()} disabled={uploading} style={{
+                backgroundColor: 'transparent', color: accent, border: `1px solid ${accent}`,
+                padding: '12px 20px', borderRadius: '999px', cursor: uploading ? 'wait' : 'pointer', opacity: uploading ? 0.7 : 1,
+                fontFamily: 'Manrope, sans-serif', fontSize: '13px',
+                textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flex: isMobile ? '1 1 100%' : 'none',
+              }}>
+                <Upload size={16} /> {uploading ? 'Reading file...' : 'Upload PDF / EPUB / TXT'}
+              </button>
               <button onClick={openImport} style={{
                 backgroundColor: 'transparent', color: accent, border: `1px solid ${accent}`,
                 padding: '12px 20px', borderRadius: '999px', cursor: 'pointer',
@@ -320,8 +353,10 @@ function Admin() {
                     <img src={book.coverImage} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                   <div style={{ flex: '1 1 160px', minWidth: 0 }}>
-                    <p style={{ fontFamily: 'Newsreader, serif', fontSize: '18px', color: colors.text }}>{book.title}</p>
-                    <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted }}>{book.author} · {book.genre} · {book.isFree ? 'Free' : `$${book.price}`} · {book.bookType === 'gutenberg' ? '⚡ on-demand' : ''} {book.totalPages || book.pages.length} pages</p>
+                    <p style={{ fontFamily: 'Newsreader, serif', fontSize: '18px', color: colors.text }}>{book.title}{book.isPublished === false && (
+                      <span style={{ marginLeft: '10px', fontFamily: 'Manrope, sans-serif', fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: '#b8845a', border: '1px solid #b8845a', borderRadius: '999px', padding: '2px 8px', verticalAlign: '3px' }}>Draft</span>
+                    )}</p>
+                    <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted }}>{book.author} · {book.genre} · {book.isFree ? 'Free' : `$${book.price}`} · {book.bookType === 'gutenberg' ? '⚡ on-demand' : book.bookType === 'uploaded' ? 'uploaded' : ''} {book.totalPages || book.pages.length} pages</p>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => openEdit(book)} style={{
@@ -576,7 +611,17 @@ function Admin() {
                   <input type="checkbox" name="isFree" checked={form.isFree} onChange={handleFormChange} />
                   <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: '13px', color: colors.text }}>Free book</span>
                 </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                  <input type="checkbox" name="isPublished" checked={form.isPublished !== false} onChange={handleFormChange} />
+                  <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: '13px', color: colors.text }}>Published (visible to readers)</span>
+                </label>
               </div>
+              {form.bookType === 'uploaded' && (
+                <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted, lineHeight: 1.6 }}>
+                  Uploaded book: {form.totalPages} pages. The title, author and cover were guessed from the file. Check them,
+                  add a description, pick a genre, then tick Published. The page text can't be edited here.
+                </p>
+              )}
 
               {!form.isFree && (
                 <div>
@@ -590,7 +635,7 @@ function Admin() {
                 <input name="freePreviewPages" type="number" value={form.freePreviewPages} onChange={handleFormChange} style={inputStyle} />
               </div>
 
-              {form.bookType !== 'gutenberg' && (
+              {form.bookType === 'custom' && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <label style={{ ...labelStyle, marginBottom: 0 }}>Pages ({form.pages.length})</label>

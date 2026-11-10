@@ -68,7 +68,7 @@ const bookFields = z.object({
   title: text(200).min(1),
   author: text(200).min(1),
   description: z.string().trim().min(1).max(5000),
-  coverImage: text(1000).min(1),
+  coverImage: text(8000).min(1), // generated covers are inline SVG data URIs (~1.6 KB)
   genre: text(60).min(1),
   price: z.coerce.number().min(0).max(100000),
   isFree: z.boolean().optional(),
