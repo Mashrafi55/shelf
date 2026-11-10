@@ -58,6 +58,23 @@ function ContinueReading({ item }) {
   )
 }
 
+function GenreChips({ genres }) {
+  const { darkMode } = useTheme()
+  const colors = COLORS[darkMode ? 'dark' : 'light']
+  if (!genres.length) return null
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '56px' }}>
+      {genres.map(g => (
+        <Link key={g} to={`/browse?genre=${encodeURIComponent(g)}`} style={{
+          fontFamily: 'Manrope, sans-serif', fontSize: '12px', fontWeight: '600',
+          color: colors.text, textDecoration: 'none', padding: '8px 16px',
+          border: `1px solid ${colors.border}`, borderRadius: '999px',
+        }}>{g}</Link>
+      ))}
+    </div>
+  )
+}
+
 function Skeletons() {
   const { darkMode } = useTheme()
   const colors = COLORS[darkMode ? 'dark' : 'light']
@@ -85,6 +102,7 @@ function Home() {
   const [recommended, setRecommended] = useState([])
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
+  const [genres, setGenres] = useState([])
   const [reading, setReading] = useState(null)
 
   const colors = COLORS[darkMode ? 'dark' : 'light']
@@ -98,6 +116,7 @@ function Home() {
           axios.get(`${API}/books/popular`),
           axios.get(`${API}/books/toprated`),
           axios.get(`${API}/books?limit=12`),
+          axios.get(`${API}/books/genres`),
         ]
         if (user) {
           requests.push(axios.get(`${API}/books/recommended`, { headers }))
@@ -108,9 +127,10 @@ function Home() {
         setPopular(results[0].data)
         setTopRated(results[1].data)
         setAllBooks(results[2].data.books)
+        setGenres(results[3].data)
         if (user) {
-          setRecommended(results[3].data)
-          setReading(results[4].data?.book ? results[4].data : null)
+          setRecommended(results[4].data)
+          setReading(results[5].data?.book ? results[5].data : null)
         }
       } catch (error) {
         console.error(error)
@@ -167,6 +187,7 @@ function Home() {
         ) : (
           <>
             {reading && <ContinueReading item={reading} />}
+            <GenreChips genres={genres} />
             {user && recommended.length > 0 && <Section title="Recommended for You" books={recommended} />}
             {popular.length > 0 && <Section title="Popular Now" books={popular} />}
             {topRated.length > 0 && <Section title="Top Rated" books={topRated} />}
