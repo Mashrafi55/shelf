@@ -13,8 +13,10 @@ const textCache = new Map() // gutenbergId -> { pages, totalPages }
 
 // split books are also saved to disk so restarts and repeat reads are instant
 const DISK_DIR = path.join(__dirname, '..', 'cache', 'books')
+// bump SPLIT_VERSION whenever the chapter/page splitting logic changes, so old cached splits are ignored
+const SPLIT_VERSION = 2
 const diskFile = (gutenbergId, wordsPerPage) =>
-  path.join(DISK_DIR, `${String(gutenbergId).replace(/\D/g, '')}-${wordsPerPage}.json`)
+  path.join(DISK_DIR, `${String(gutenbergId).replace(/\D/g, '')}-${wordsPerPage}-v${SPLIT_VERSION}.json`)
 
 const readDisk = (file) => {
   try { return JSON.parse(fs.readFileSync(file, 'utf8')) } catch { return null }
@@ -115,4 +117,17 @@ const fetchGutenbergPage = async (gutenbergId, pageNumber, wordsPerPage = 800) =
   return result
 }
 
+// chapter list for a book: the first page of every chapter (1-based page numbers, front matter included)
+const fetchGutenbergChapters = async (gutenbergId, wordsPerPage = 800) => {
+  const { pages } = await loadSplitBook(gutenbergId, wordsPerPage)
+  return {
+    totalPages: pages.length,
+    frontPages: pages.filter(p => p.front).length,
+    chapters: pages
+      .map((p, i) => ({ page: i + 1, number: p.chapterNumber || '', title: p.chapterTitle || '', front: !!p.front }))
+      .filter(c => c.number || c.title),
+  }
+}
+
 module.exports = fetchGutenbergPage
+module.exports.fetchGutenbergChapters = fetchGutenbergChapters

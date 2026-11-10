@@ -8,6 +8,7 @@ const {
   getRecommendedBooks,
   getBook,
   getBookPage,
+  getBookChapters,
   getBookReviews,
   addReview,
   updateReview,
@@ -25,6 +26,7 @@ router.get('/popular', getPopularBooks)
 router.get('/toprated', getTopRatedBooks)
 router.get('/recommended', protect, getRecommendedBooks)
 router.get('/:id', validateIds('id'), optionalProtect, getBook)
+router.get('/:id/chapters', pageLimiter, validateIds('id'), optionalProtect, getBookChapters)
 router.get('/:id/pages/:pageNumber', pageLimiter, validateIds('id'), optionalProtect, getBookPage)
 router.get('/:id/reviews', validateIds('id'), getBookReviews)
 router.post('/:id/reviews', writeLimiter, validateIds('id'), protect, validate(schemas.review), addReview)

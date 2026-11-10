@@ -1,5 +1,9 @@
 // Gutenberg import engine — metadata via Gutendex, text via gutenberg.org
 
+// Node gives each address only 250ms to connect by default; on slower links every attempt
+// times out and fetch() fails with ETIMEDOUT. Give each attempt a few seconds instead.
+require('net').setDefaultAutoSelectFamilyAttemptTimeout?.(5000)
+
 const WORDS_PER_PAGE = 800
 const GENRES = [
   'Fiction', 'Non-Fiction', 'Philosophy', 'Science', 'History',
@@ -180,7 +184,8 @@ const matchHeadingShallow = (line) => CHAPTER_RE.test(line) || GROUP_RE.test(lin
 const matchHeading = (lines, idx) => {
   const line = lines[idx].trim()
   if (!line || line.length > 80) return null
-  if (/\.\s*\.\s*\.|\s\d+$/.test(line)) return null // contents entry: "Title . . . . 41"
+  // contents entry: "Title . . . . 41" or "Title   41" — but "Chapter 2" / "Letter 1" are real headings
+  if (/\.\s*\.\s*\./.test(line) || (/\s\d+$/.test(line) && !/^(chapter|letter|book|part|volume)\s+\d+$/i.test(line))) return null
 
   let number = ''
   let title = ''

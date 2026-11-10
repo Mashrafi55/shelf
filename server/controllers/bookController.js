@@ -4,6 +4,7 @@ const Review = require('../models/Review')
 const SavedBook = require('../models/SavedBook')
 const Favourite = require('../models/Favourite')
 const fetchGutenbergPage = require('../utils/fetchGutenbergPage')
+const { fetchGutenbergChapters } = fetchGutenbergPage
 const { recalcBookRating } = require('../utils/ratings')
 
 // @GET /api/books - Get all published books
@@ -186,6 +187,58 @@ const getBookPage = async (req, res) => {
   }
 }
 
+// "12" -> "Chapter 12"; labels like "Letter 3" or "Book the First · Chapter I" are kept as they are
+const chapterLabel = (number) => (/^[ivxlcdm\d]+$/i.test(number) ? `Chapter ${number}` : number)
+
+// @GET /api/books/:id/chapters - Chapter list: [{ page, label, title, locked }]
+// Non-owners of a paid book see page numbers as the preview reader numbers them (story from page 1)
+// and chapters past the free preview are marked locked.
+const getBookChapters = async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id)
+    if (!book) return res.status(404).json({ message: 'Book not found' })
+
+    let owned = false
+    if (req.user) {
+      const purchase = await Purchase.findOne({ user: req.user._id, book: book._id })
+      owned = !!purchase || book.isFree
+    }
+    const previewOnly = !owned && !book.isFree
+
+    let raw = []
+    let totalPages = 0
+    let frontPages = 0
+    if (book.bookType === 'gutenberg') {
+      try {
+        ({ chapters: raw, totalPages, frontPages } = await fetchGutenbergChapters(book.gutenbergId))
+      } catch (error) {
+        return res.status(error.status || 502).json({ message: error.message })
+      }
+    } else {
+      totalPages = book.pages.length
+      raw = book.pages
+        .map((p, i) => ({ page: i + 1, number: p.chapterNumber || '', title: p.chapterTitle || '', front: false }))
+        .filter(c => c.number || c.title)
+    }
+
+    const offset = previewOnly ? frontPages : 0
+    const chapters = raw
+      .filter(c => !(previewOnly && c.front))
+      .map(c => {
+        const page = c.page - offset
+        return {
+          page,
+          label: chapterLabel(c.number),
+          title: c.title,
+          locked: previewOnly && page > book.freePreviewPages,
+        }
+      })
+    res.json({ chapters, totalPages: totalPages - offset })
+  } catch (error) {
+    res.status(500).json({ message: 'Something went wrong' })
+  }
+}
+
 // @GET /api/books/:id/reviews - Get reviews for a book
 const getBookReviews = async (req, res) => {
   try {
@@ -289,6 +342,7 @@ module.exports = {
   getRecommendedBooks,
   getBook,
   getBookPage,
+  getBookChapters,
   getBookReviews,
   addReview,
   updateReview,
