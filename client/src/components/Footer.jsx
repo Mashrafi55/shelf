@@ -71,12 +71,6 @@ export default function Footer() {
           display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px',
         }}>
           <span style={{ ...link, fontSize: '12px' }}>© {new Date().getFullYear()} Shelf</span>
-          <span style={{ ...link, fontSize: '12px' }}>
-            Public-domain books courtesy of{' '}
-            <a href="https://www.gutenberg.org" target="_blank" rel="noreferrer" style={{ color: accent }}>
-              Project Gutenberg
-            </a>
-          </span>
         </div>
       </div>
     </footer>
