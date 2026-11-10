@@ -6,8 +6,8 @@ export function ThemeProvider({ children }) {
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode')
     if (saved !== null) return JSON.parse(saved)
-    const hour = new Date().getHours()
-    return hour < 7 || hour >= 19
+    // no saved choice: follow the device's light/dark setting
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
   })
 
   useEffect(() => {
