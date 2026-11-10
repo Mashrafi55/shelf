@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, Sun, Moon, BookOpen, Bookmark } from 'lucide-react'
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { ArrowLeft, ArrowRight, Sun, Moon, BookOpen, Bookmark, List } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
 import useAuthStore from '../store/authStore'
 import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
 import useWindowSize from '../hooks/useWindowSize'
+import ChapterPanel from '../components/ChapterPanel'
 
 function Reader() {
   const { darkMode, toggleDarkMode } = useTheme()
@@ -16,6 +17,9 @@ function Reader() {
   const [book, setBook] = useState(null)
   const [currentPage, setCurrentPage] = useState(0)
   const touchStartX = useRef(null)
+  const [searchParams] = useSearchParams()
+  const [chapters, setChapters] = useState([])
+  const [showContents, setShowContents] = useState(false)
   const { isMobile } = useWindowSize()
   const [fontSize, setFontSize] = useState(18)
   const [loading, setLoading] = useState(true)
@@ -39,6 +43,12 @@ function Reader() {
           )
           if (progress) setCurrentPage(progress.lastPage - 1)
         }
+        // ?page=N (from a chapter link) wins over the saved position
+        const wanted = parseInt(searchParams.get('page'), 10)
+        if (wanted >= 1) setCurrentPage(wanted - 1)
+        axios.get(`${API}/books/${id}/chapters`, { headers })
+          .then(res => setChapters(res.data.chapters))
+          .catch(() => {})
       } catch {
         toast.error('Could not load book')
         navigate('/')
@@ -47,6 +57,7 @@ function Reader() {
       }
     }
     fetchBook()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user, navigate])
 
   // the page on screen is "loading" until the fetched page matches the one asked for
@@ -167,17 +178,33 @@ function Reader() {
             <p style={{ fontFamily: 'Newsreader, serif', fontSize: '14px', color: colors.text, fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{book.title}</p>
             <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '11px', color: colors.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{book.author}</p>
           </div>
-          <button onClick={handleBookmark} style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            color: colors.muted, display: 'flex', alignItems: 'center',
-          }}>
-            <Bookmark size={18} />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <button onClick={() => setShowContents(true)} aria-label="Contents" style={{
+              background: 'none', border: 'none', cursor: 'pointer', color: colors.muted,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', height: '44px',
+            }}>
+              <List size={20} />
+            </button>
+            <button onClick={handleBookmark} aria-label="Bookmark this page" style={{
+              background: 'none', border: 'none', cursor: 'pointer', color: colors.muted,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: '44px', height: '44px',
+            }}>
+              <Bookmark size={18} />
+            </button>
+          </div>
         </div>
         <div style={{ height: '2px', backgroundColor: colors.border }}>
           <div style={{ height: '100%', backgroundColor: accent, width: `${progress}%`, transition: 'width 0.3s ease' }} />
         </div>
       </header>
+
+      {showContents && (
+        <ChapterPanel
+          chapters={chapters} currentPage={currentPage + 1} totalPages={totalPages} isMobile={isMobile}
+          onClose={() => setShowContents(false)}
+          onGo={(page) => { setCurrentPage(page - 1); setShowContents(false); window.scrollTo(0, 0) }}
+        />
+      )}
 
       <main onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{ flex: 1, maxWidth: '680px', margin: '0 auto', padding: isMobile ? '84px 20px calc(110px + env(safe-area-inset-bottom))' : '100px 24px calc(120px + env(safe-area-inset-bottom))', width: '100%' }}>
         {isLocked ? (

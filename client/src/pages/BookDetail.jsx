@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Star, ArrowLeft, Lock, Heart, Plus, Check } from 'lucide-react'
+import { Star, ArrowLeft, Lock, Heart, Plus, Check, ChevronRight } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
@@ -23,6 +23,8 @@ function BookDetail() {
   const [purchasing, setPurchasing] = useState(false)
   const [previewPage, setPreviewPage] = useState(null)
   const [reloadKey, setReloadKey] = useState(0)
+  const [chapters, setChapters] = useState([])
+  const [showAllChapters, setShowAllChapters] = useState(false)
 
   const colors = COLORS[darkMode ? 'dark' : 'light']
   const accent = darkMode ? ACCENT_DARK : ACCENT
@@ -31,12 +33,14 @@ function BookDetail() {
     const fetchBook = async () => {
       try {
         const headers = user ? { Authorization: `Bearer ${user.token}` } : {}
-        const [bookRes, reviewsRes, pageRes] = await Promise.all([
+        const [bookRes, reviewsRes, pageRes, chaptersRes] = await Promise.all([
           axios.get(`${API}/books/${id}`, { headers }),
           axios.get(`${API}/books/${id}/reviews`),
           // preview page — works for both custom and gutenberg books
           axios.get(`${API}/books/${id}/pages/1`).catch(() => ({ data: null })),
+          axios.get(`${API}/books/${id}/chapters`, { headers }).catch(() => ({ data: { chapters: [] } })),
         ])
+        setChapters(chaptersRes.data.chapters || [])
         setBook(bookRes.data)
         setReviews(reviewsRes.data)
         setPreviewPage(pageRes.data)
@@ -239,6 +243,46 @@ function BookDetail() {
               color: colors.text, lineHeight: '1.8', marginBottom: '40px',
             }}>{book.description}</p>
 
+            {/* Chapters */}
+            {chapters.length > 0 && (
+              <div style={{ marginBottom: '40px' }}>
+                <span style={{
+                  fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase',
+                  letterSpacing: '0.1em', color: accent, fontWeight: '600', display: 'block', marginBottom: '16px',
+                }}>Chapters ({chapters.length})</span>
+                <div style={{ border: `1px solid ${colors.border}`, borderRadius: '12px', overflow: 'hidden', backgroundColor: colors.card }}>
+                  {(showAllChapters ? chapters : chapters.slice(0, 8)).map((c, i, list) => {
+                    const row = {
+                      display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', minHeight: '52px',
+                      borderBottom: i < list.length - 1 ? `1px solid ${colors.border}` : 'none',
+                      textDecoration: 'none', opacity: c.locked ? 0.55 : 1,
+                    }
+                    const inner = (
+                      <>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: '13px', fontWeight: 700, color: colors.text }}>{c.label || c.title}</div>
+                          {c.label && c.title && (
+                            <div style={{ fontFamily: 'Newsreader, serif', fontSize: '15px', color: colors.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</div>
+                          )}
+                        </div>
+                        {c.locked ? <Lock size={14} color={colors.muted} /> : <ChevronRight size={16} color={colors.muted} />}
+                      </>
+                    )
+                    return c.locked
+                      ? <div key={`${c.page}-${i}`} style={row}>{inner}</div>
+                      : <Link key={`${c.page}-${i}`} to={`/read/${book._id}?page=${c.page}`} style={row}>{inner}</Link>
+                  })}
+                </div>
+                {chapters.length > 8 && (
+                  <button onClick={() => setShowAllChapters(v => !v)} style={{
+                    marginTop: '12px', background: 'none', border: 'none', cursor: 'pointer', color: accent,
+                    fontFamily: 'Manrope, sans-serif', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase',
+                    letterSpacing: '0.05em', padding: '8px 0',
+                  }}>{showAllChapters ? 'Show fewer' : `Show all ${chapters.length} chapters`}</button>
+                )}
+              </div>
+            )}
+
             {/* Preview Section */}
 
             {(book.pages?.length > 0 || book.totalPages > 0) && (
@@ -262,7 +306,7 @@ function BookDetail() {
                           <div style={{
                             fontFamily: 'Manrope, sans-serif', fontSize: '11px', fontWeight: '600',
                             textTransform: 'uppercase', letterSpacing: '0.2em', color: accent, marginBottom: '8px',
-                          }}>Chapter {previewPage.chapterNumber}</div>
+                          }}>{/^[ivxlcdm\d]+$/i.test(previewPage.chapterNumber) ? `Chapter ${previewPage.chapterNumber}` : previewPage.chapterNumber}</div>
                         )}
                         {previewPage.chapterTitle && (
                           <h3 style={{
