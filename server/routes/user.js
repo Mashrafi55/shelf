@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const {
   getProfile,
+  changePassword,
   updateProfile,
   updateGenres,
   getLibrary,
@@ -15,10 +16,12 @@ const {
 } = require('../controllers/userController')
 const { protect } = require('../middleware/auth')
 const { validate, validateIds } = require('../middleware/validate')
+const { authLimiter: authWriteLimit } = require('../middleware/rateLimiters')
 const schemas = require('../validators/schemas')
 
 router.get('/profile', protect, getProfile)
 router.put('/profile', protect, validate(schemas.profile), updateProfile)
+router.put('/password', authWriteLimit, protect, validate(schemas.changePassword), changePassword)
 router.put('/genres', protect, validate(schemas.genres), updateGenres)
 router.get('/library', protect, getLibrary)
 router.get('/favourites', protect, getFavourites)

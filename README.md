@@ -5,7 +5,8 @@ Public-domain books are imported from Project Gutenberg; their text is fetched o
 and cached on disk, so each book stays a few KB in the database.
 
 ## Features
-- Browse, search and read books with chapter headings and a dark/light theme
+- Browse page with search, genre filter, sorting and pagination; reader with chapter headings, saved reading progress and a dark/light theme
+- Reviews (write, edit, delete your own; admins can moderate) and a profile page (name, password)
 - Accounts with JWT (httpOnly cookie), email verification, password reset, genre onboarding, bookmarks, favourites and reviews
 - Admin panel: add books, edit chapter titles, search and import from Project Gutenberg
 

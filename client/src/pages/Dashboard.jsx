@@ -81,6 +81,10 @@ function Dashboard() {
           <h1 style={{ fontFamily: 'Newsreader, serif', fontSize: '40px', color: colors.text, fontWeight: '400' }}>
             Welcome back, {user?.name?.split(' ')[0]}.
           </h1>
+          <Link to="/profile" style={{
+            display: 'inline-block', marginTop: '12px', fontFamily: 'Manrope, sans-serif',
+            fontSize: '13px', color: accent, textDecoration: 'underline',
+          }}>Account settings</Link>
         </div>
 
         {currentlyReading?.book && (

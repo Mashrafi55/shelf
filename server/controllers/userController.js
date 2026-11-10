@@ -22,9 +22,26 @@ const updateProfile = async (req, res) => {
     if (name) user.name = name
     if (readingMode) user.readingMode = readingMode
     await user.save()
-    res.json({ message: 'Profile updated', user })
+    const { password, ...safeUser } = user.toObject()
+    res.json({ message: 'Profile updated', user: safeUser })
   } catch (error) {
     res.status(500).json({ message: error.message })
+  }
+}
+
+// @PUT /api/user/password - Change password (requires the current one)
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body
+    const user = await User.findById(req.user._id)
+    if (!(await user.matchPassword(currentPassword))) {
+      return res.status(400).json({ message: 'Current password is incorrect' })
+    }
+    user.password = newPassword
+    await user.save()
+    res.json({ message: 'Password updated' })
+  } catch (error) {
+    res.status(500).json({ message: 'Something went wrong' })
   }
 }
 
@@ -175,6 +192,7 @@ const getCurrentlyReading = async (req, res) => {
 
 module.exports = {
   getProfile,
+  changePassword,
   updateProfile,
   updateGenres,
   getLibrary,

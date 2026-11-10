@@ -8,6 +8,7 @@ import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
 import Admin from './pages/Admin'
 import Browse from './pages/Browse'
+import Profile from './pages/Profile'
 import RequireAuth from './components/RequireAuth'
 import VerifyBanner from './components/VerifyBanner'
 import ForgotPassword from './pages/ForgotPassword'
@@ -32,6 +33,7 @@ function App() {
           <Route path="/book/:id" element={<BookDetail />} />
           <Route path="/read/:id" element={<Reader />} />
           <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
+          <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
           <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
           <Route path="/admin" element={<RequireAuth role="admin"><Admin /></RequireAuth>} />
         </Routes>

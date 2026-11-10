@@ -43,6 +43,11 @@ const profile = z.object({
   readingMode: z.enum(['auto', 'light', 'dark']).optional(),
 })
 
+const changePassword = z.object({
+  currentPassword: z.string().min(1, 'Current password is required').max(200),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters').max(72, 'Password is too long'),
+})
+
 const genres = z.object({
   genres: z.array(text(40).min(1)).max(30),
 })
@@ -75,4 +80,4 @@ const bookFields = z.object({
 const addBook = bookFields
 const editBook = bookFields.partial()
 
-module.exports = { tokenOnly, forgotPassword, resetPassword, register, login, review, bookmark, progress, profile, genres, addBook, editBook }
+module.exports = { changePassword, tokenOnly, forgotPassword, resetPassword, register, login, review, bookmark, progress, profile, genres, addBook, editBook }
