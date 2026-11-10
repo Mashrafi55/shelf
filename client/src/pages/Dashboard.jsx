@@ -179,7 +179,7 @@ function Dashboard() {
               <p style={{ fontFamily: 'Newsreader, serif', fontSize: '24px', color: colors.muted, fontStyle: 'italic', marginBottom: '16px' }}>
                 No favourites yet.
               </p>
-              <Link to="/" style={{ color: accent, fontFamily: 'Manrope, sans-serif', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              <Link to="/browse" style={{ color: accent, fontFamily: 'Manrope, sans-serif', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Discover Books →
               </Link>
             </div>

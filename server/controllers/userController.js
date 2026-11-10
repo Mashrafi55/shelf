@@ -3,6 +3,7 @@ const Book = require('../models/Book')
 const Purchase = require('../models/Purchase')
 const Bookmark = require('../models/Bookmark')
 const Favourite = require('../models/Favourite')
+const SavedBook = require('../models/SavedBook')
 
 // @GET /api/user/profile
 const getProfile = async (req, res) => {
@@ -59,15 +60,48 @@ const updateGenres = async (req, res) => {
   }
 }
 
-// @GET /api/user/library - Get purchased books
+// @GET /api/user/library - Purchased books plus free books the user added
 const getLibrary = async (req, res) => {
   try {
-    const purchases = await Purchase.find({ user: req.user._id })
-      .populate('book')
-      .sort({ createdAt: -1 })
-    res.json(purchases)
+    const [purchases, saved] = await Promise.all([
+      Purchase.find({ user: req.user._id }).populate('book'),
+      SavedBook.find({ user: req.user._id }).populate('book'),
+    ])
+    const seen = new Set()
+    const items = [...purchases, ...saved]
+      .filter(item => item.book && !seen.has(String(item.book._id)) && seen.add(String(item.book._id)))
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .map(item => ({ _id: item._id, book: item.book, createdAt: item.createdAt }))
+    res.json(items)
   } catch (error) {
     res.status(500).json({ message: error.message })
+  }
+}
+
+// @POST /api/user/library/:bookId - Add a free book to the library
+const addToLibrary = async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.bookId)
+    if (!book) return res.status(404).json({ message: 'Book not found' })
+    if (!book.isFree) return res.status(400).json({ message: 'Buy this book to add it to your library' })
+    await SavedBook.updateOne(
+      { user: req.user._id, book: book._id },
+      { $setOnInsert: { user: req.user._id, book: book._id } },
+      { upsert: true }
+    )
+    res.status(201).json({ message: 'Added to your library', inLibrary: true })
+  } catch (error) {
+    res.status(500).json({ message: 'Something went wrong' })
+  }
+}
+
+// @DELETE /api/user/library/:bookId - Remove a saved free book (purchases stay)
+const removeFromLibrary = async (req, res) => {
+  try {
+    await SavedBook.deleteOne({ user: req.user._id, book: req.params.bookId })
+    res.json({ message: 'Removed from your library', inLibrary: false })
+  } catch (error) {
+    res.status(500).json({ message: 'Something went wrong' })
   }
 }
 
@@ -196,6 +230,8 @@ module.exports = {
   updateProfile,
   updateGenres,
   getLibrary,
+  addToLibrary,
+  removeFromLibrary,
   getFavourites,
   toggleFavourite,
   getBookmarks,

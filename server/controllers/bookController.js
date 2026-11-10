@@ -1,6 +1,8 @@
 const Book = require('../models/Book')
 const Purchase = require('../models/Purchase')
 const Review = require('../models/Review')
+const SavedBook = require('../models/SavedBook')
+const Favourite = require('../models/Favourite')
 const fetchGutenbergPage = require('../utils/fetchGutenbergPage')
 const { recalcBookRating } = require('../utils/ratings')
 
@@ -99,9 +101,17 @@ const getBook = async (req, res) => {
 
     // Check if user owns the book
     let owned = false
+    let inLibrary = false
+    let favourited = false
     if (req.user) {
-      const purchase = await Purchase.findOne({ user: req.user._id, book: book._id })
+      const [purchase, saved, fav] = await Promise.all([
+        Purchase.findOne({ user: req.user._id, book: book._id }),
+        SavedBook.exists({ user: req.user._id, book: book._id }),
+        Favourite.exists({ user: req.user._id, book: book._id }),
+      ])
       owned = !!purchase || book.isFree
+      inLibrary = !!purchase || !!saved
+      favourited = !!fav
     }
 
     // Only send free preview pages if not owned
@@ -112,7 +122,7 @@ const getBook = async (req, res) => {
       bookData.totalPages = Math.max(0, (book.totalPages || 0) - (book.frontPages || 0))
     }
 
-    res.json({ ...bookData, owned })
+    res.json({ ...bookData, owned, inLibrary, favourited })
   } catch (error) {
     res.status(500).json({ message: error.message })
   }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Star, ArrowLeft, Lock } from 'lucide-react'
+import { Star, ArrowLeft, Lock, Heart, Plus, Check } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
@@ -62,6 +62,35 @@ function BookDetail() {
       toast.error(error.response?.data?.message || 'Purchase failed')
     } finally {
       setPurchasing(false)
+    }
+  }
+
+  // add/remove a free book from "My Library", and the heart (favourites)
+  const authHeaders = { Authorization: `Bearer ${user?.token}` }
+  const toggleLibrary = async () => {
+    if (!user) return navigate('/login')
+    try {
+      if (book.inLibrary) {
+        await axios.delete(`${API}/user/library/${id}`, { headers: authHeaders })
+        setBook(b => ({ ...b, inLibrary: false }))
+        toast.success('Removed from your library')
+      } else {
+        await axios.post(`${API}/user/library/${id}`, {}, { headers: authHeaders })
+        setBook(b => ({ ...b, inLibrary: true }))
+        toast.success('Added to your library')
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Something went wrong')
+    }
+  }
+  const toggleFavourite = async () => {
+    if (!user) return navigate('/login')
+    try {
+      const { data } = await axios.post(`${API}/user/favourites/${id}`, {}, { headers: authHeaders })
+      setBook(b => ({ ...b, favourited: data.favourited }))
+      toast.success(data.message)
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Something went wrong')
     }
   }
 
@@ -140,6 +169,27 @@ function BookDetail() {
                 }}>Read Preview</Link>
               </div>
             )}
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+              {book.isFree && (
+                <button onClick={toggleLibrary} style={{
+                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                  backgroundColor: 'transparent', color: accent, border: `1px solid ${accent}`,
+                  padding: '14px', borderRadius: '999px', cursor: 'pointer', minHeight: '44px',
+                  fontFamily: 'Manrope, sans-serif', fontSize: '12px', fontWeight: '700',
+                  textTransform: 'uppercase', letterSpacing: '0.06em',
+                }}>
+                  {book.inLibrary ? <><Check size={16} /> In my library</> : <><Plus size={16} /> Add to my library</>}
+                </button>
+              )}
+              <button onClick={toggleFavourite} aria-label={book.favourited ? 'Remove from favourites' : 'Add to favourites'} style={{
+                width: '48px', height: '48px', flexShrink: 0, borderRadius: '50%', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                backgroundColor: 'transparent', border: `1px solid ${accent}`, color: accent,
+              }}>
+                <Heart size={18} fill={book.favourited ? accent : 'none'} />
+              </button>
+            </div>
           </div>
 
           {/* Right — Info */}

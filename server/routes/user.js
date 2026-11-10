@@ -6,6 +6,8 @@ const {
   updateProfile,
   updateGenres,
   getLibrary,
+  addToLibrary,
+  removeFromLibrary,
   getFavourites,
   toggleFavourite,
   getBookmarks,
@@ -24,6 +26,8 @@ router.put('/profile', protect, validate(schemas.profile), updateProfile)
 router.put('/password', authWriteLimit, protect, validate(schemas.changePassword), changePassword)
 router.put('/genres', protect, validate(schemas.genres), updateGenres)
 router.get('/library', protect, getLibrary)
+router.post('/library/:bookId', validateIds('bookId'), protect, addToLibrary)
+router.delete('/library/:bookId', validateIds('bookId'), protect, removeFromLibrary)
 router.get('/favourites', protect, getFavourites)
 router.post('/favourites/:bookId', validateIds('bookId'), protect, toggleFavourite)
 router.get('/bookmarks', protect, getBookmarks)
