@@ -8,7 +8,8 @@ const {
   getAllUsers,
   getSales,
   searchGutenberg,
-  importGutenberg
+  importGutenberg,
+  deleteReview
 } = require('../controllers/adminController')
 const { protect } = require('../middleware/auth')
 const { isAdmin } = require('../middleware/isAdmin')
@@ -22,6 +23,7 @@ router.get('/books', getAllBooks)
 router.post('/books', validate(schemas.addBook), addBook)
 router.put('/books/:id', validateIds('id'), validate(schemas.editBook), editBook)
 router.delete('/books/:id', validateIds('id'), deleteBook)
+router.delete('/reviews/:id', validateIds('id'), deleteReview)
 router.get('/users', getAllUsers)
 router.get('/sales', getSales)
 router.get('/gutenberg/search', searchGutenberg)

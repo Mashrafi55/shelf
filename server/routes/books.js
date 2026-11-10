@@ -9,6 +9,8 @@ const {
   getBookPage,
   getBookReviews,
   addReview,
+  updateReview,
+  deleteReview,
   purchaseBook
 } = require('../controllers/bookController')
 const { protect, optionalProtect } = require('../middleware/auth')
@@ -24,6 +26,8 @@ router.get('/:id', validateIds('id'), optionalProtect, getBook)
 router.get('/:id/pages/:pageNumber', pageLimiter, validateIds('id'), optionalProtect, getBookPage)
 router.get('/:id/reviews', validateIds('id'), getBookReviews)
 router.post('/:id/reviews', writeLimiter, validateIds('id'), protect, validate(schemas.review), addReview)
+router.put('/:id/reviews', writeLimiter, validateIds('id'), protect, validate(schemas.review), updateReview)
+router.delete('/:id/reviews', writeLimiter, validateIds('id'), protect, deleteReview)
 router.post('/:id/purchase', writeLimiter, validateIds('id'), protect, purchaseBook)
 
 module.exports = router

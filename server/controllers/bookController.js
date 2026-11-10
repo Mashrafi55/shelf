@@ -2,6 +2,7 @@ const Book = require('../models/Book')
 const Purchase = require('../models/Purchase')
 const Review = require('../models/Review')
 const fetchGutenbergPage = require('../utils/fetchGutenbergPage')
+const { recalcBookRating } = require('../utils/ratings')
 
 // @GET /api/books - Get all published books
 const getBooks = async (req, res) => {
@@ -184,15 +185,40 @@ const addReview = async (req, res) => {
       comment
     })
 
-    // Update book average rating
-    const reviews = await Review.find({ book: book._id })
-    book.totalRatings = reviews.length
-    book.averageRating = reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length
-    await book.save()
+    await recalcBookRating(book._id)
 
     res.status(201).json(review)
   } catch (error) {
     res.status(500).json({ message: error.message })
+  }
+}
+
+// @PUT /api/books/:id/reviews - Edit your own review
+const updateReview = async (req, res) => {
+  try {
+    const { rating, comment } = req.body
+    const review = await Review.findOneAndUpdate(
+      { user: req.user._id, book: req.params.id },
+      { rating, comment },
+      { new: true, runValidators: true }
+    )
+    if (!review) return res.status(404).json({ message: 'You have not reviewed this book' })
+    await recalcBookRating(review.book)
+    res.json(review)
+  } catch (error) {
+    res.status(500).json({ message: 'Something went wrong' })
+  }
+}
+
+// @DELETE /api/books/:id/reviews - Delete your own review
+const deleteReview = async (req, res) => {
+  try {
+    const review = await Review.findOneAndDelete({ user: req.user._id, book: req.params.id })
+    if (!review) return res.status(404).json({ message: 'You have not reviewed this book' })
+    await recalcBookRating(review.book)
+    res.json({ message: 'Review deleted' })
+  } catch (error) {
+    res.status(500).json({ message: 'Something went wrong' })
   }
 }
 
@@ -234,5 +260,7 @@ module.exports = {
   getBookPage,
   getBookReviews,
   addReview,
+  updateReview,
+  deleteReview,
   purchaseBook
 }

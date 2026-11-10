@@ -1,6 +1,8 @@
 const Book = require('../models/Book')
 const User = require('../models/User')
 const Purchase = require('../models/Purchase')
+const Review = require('../models/Review')
+const { recalcBookRating } = require('../utils/ratings')
 const { searchGutenbergBooks, getGutenbergBook } = require('../utils/gutenberg')
 
 // @POST /api/admin/books - Add a book
@@ -101,4 +103,16 @@ const importGutenberg = async (req, res) => {
   }
 }
 
-module.exports = { addBook, editBook, deleteBook, getAllBooks, getAllUsers, getSales, searchGutenberg, importGutenberg }
+// @DELETE /api/admin/reviews/:id - Remove any review (moderation)
+const deleteReview = async (req, res) => {
+  try {
+    const review = await Review.findByIdAndDelete(req.params.id)
+    if (!review) return res.status(404).json({ message: 'Review not found' })
+    await recalcBookRating(review.book)
+    res.json({ message: 'Review deleted' })
+  } catch (error) {
+    res.status(500).json({ message: 'Something went wrong' })
+  }
+}
+
+module.exports = { addBook, editBook, deleteBook, getAllBooks, getAllUsers, getSales, searchGutenberg, importGutenberg, deleteReview }

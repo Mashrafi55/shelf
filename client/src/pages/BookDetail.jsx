@@ -7,6 +7,7 @@ import { useTheme } from '../context/ThemeContext'
 import useAuthStore from '../store/authStore'
 import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
 import useWindowSize from '../hooks/useWindowSize'
+import ReviewSection from '../components/ReviewSection'
 
 function BookDetail() {
   
@@ -20,6 +21,7 @@ function BookDetail() {
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState(false)
   const [previewPage, setPreviewPage] = useState(null)
+  const [reloadKey, setReloadKey] = useState(0)
 
   const colors = COLORS[darkMode ? 'dark' : 'light']
   const accent = darkMode ? ACCENT_DARK : ACCENT
@@ -45,7 +47,7 @@ function BookDetail() {
       }
     }
     fetchBook()
-  }, [id, user, navigate])
+  }, [id, user, navigate, reloadKey])
 
   const handleBuy = async () => {
     if (!user) return navigate('/login')
@@ -265,47 +267,7 @@ function BookDetail() {
           </div>
         </div>
 
-        {reviews.length > 0 && (
-          <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: '48px' }}>
-            <h2 style={{
-              fontFamily: 'Newsreader, serif', fontSize: '32px',
-              color: colors.text, marginBottom: '32px', fontWeight: '400',
-            }}>Reviews</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-              {reviews.map(review => (
-                <div key={review._id} style={{
-                  backgroundColor: colors.card, borderRadius: '12px',
-                  padding: '24px', border: `1px solid ${colors.border}`,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                    <div style={{
-                      width: '36px', height: '36px', borderRadius: '50%',
-                      backgroundColor: accent, display: 'flex',
-                      alignItems: 'center', justifyContent: 'center',
-                      color: colors.bg, fontFamily: 'Manrope, sans-serif',
-                      fontSize: '14px', fontWeight: '700',
-                    }}>{review.user?.name?.[0]?.toUpperCase()}</div>
-                    <div>
-                      <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '14px', color: colors.text, fontWeight: '600' }}>
-                        {review.user?.name}
-                      </p>
-                      <div style={{ display: 'flex', gap: '2px' }}>
-                        {[1, 2, 3, 4, 5].map(s => (
-                          <Star key={s} size={12}
-                            fill={s <= review.rating ? accent : 'none'}
-                            color={accent} />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                  <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '14px', color: colors.muted, lineHeight: '1.7' }}>
-                    {review.comment}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <ReviewSection bookId={id} reviews={reviews} onChange={() => setReloadKey(k => k + 1)} />
       </div>
     </div>
   )
