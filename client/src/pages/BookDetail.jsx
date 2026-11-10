@@ -173,12 +173,13 @@ function BookDetail() {
 
             {book.owned ? (
               <Link to={`/read/${book._id}`} style={{
-                display: 'block', width: '100%', backgroundColor: accent,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                boxSizing: 'border-box', width: '100%', backgroundColor: accent,
                 color: colors.bg, textDecoration: 'none', padding: '14px',
                 borderRadius: '999px', fontFamily: 'Manrope, sans-serif',
                 fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.08em',
                 fontWeight: '700', textAlign: 'center',
-              }}><BookOpen size={16} style={{ verticalAlign: '-3px', marginRight: '8px' }} />{resumeLabel}</Link>
+              }}><BookOpen size={16} style={{ flexShrink: 0 }} />{resumeLabel}</Link>
             ) : book.isFree ? (
               <Link to={`/read/${book._id}`} style={{
                 display: 'block', width: '100%', backgroundColor: accent,
