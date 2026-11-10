@@ -50,6 +50,13 @@ function Navbar() {
 
             {user ? (
               <>
+                {user.role === 'admin' && (
+                  <Link to="/admin" style={{
+                    fontFamily: 'Manrope, sans-serif', fontSize: '13px',
+                    textTransform: 'uppercase', letterSpacing: '0.05em',
+                    color: colors.text, textDecoration: 'none', fontWeight: '600',
+                  }}>Admin</Link>
+                )}
                 <Link to="/dashboard" style={{
                   fontFamily: 'Manrope, sans-serif', fontSize: '13px',
                   textTransform: 'uppercase', letterSpacing: '0.05em',
@@ -124,6 +131,13 @@ function Navbar() {
 
           {user ? (
             <>
+              {user.role === 'admin' && (
+                <Link to="/admin" onClick={() => setMenuOpen(false)} style={{
+                  fontFamily: 'Manrope, sans-serif', fontSize: '14px',
+                  textTransform: 'uppercase', letterSpacing: '0.05em',
+                  color: colors.text, textDecoration: 'none', fontWeight: '600',
+                }}>Admin</Link>
+              )}
               <Link to="/dashboard" onClick={() => setMenuOpen(false)} style={{
                 fontFamily: 'Manrope, sans-serif', fontSize: '14px',
                 textTransform: 'uppercase', letterSpacing: '0.05em',

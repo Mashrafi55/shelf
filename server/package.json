@@ -8,7 +8,8 @@
     "dev": "nodemon index.js",
     "seed": "node scripts/seedGutenberg.js",
     "export": "node scripts/exportBooks.js",
-    "warm": "node scripts/warmCache.js"
+    "warm": "node scripts/warmCache.js",
+    "create-admin": "node scripts/createAdmin.js"
   },
   "keywords": [],
   "author": "",

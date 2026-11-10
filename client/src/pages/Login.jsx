@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
@@ -15,6 +15,7 @@ function Login() {
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({ name: '', email: '', password: '' })
   const navigate = useNavigate()
+  const location = useLocation()
 
   const colors = COLORS[darkMode ? 'dark' : 'light']
   const accent = darkMode ? ACCENT_DARK : ACCENT
@@ -36,7 +37,8 @@ function Login() {
       if (tab === 'register' && !data.onboardingComplete) {
         navigate('/onboarding')
       } else {
-        navigate('/')
+        // go back to the page they were trying to reach; admins land on the admin panel
+        navigate(location.state?.from || (data.role === 'admin' ? '/admin' : '/'), { replace: true })
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Something went wrong')

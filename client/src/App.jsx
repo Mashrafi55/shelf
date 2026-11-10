@@ -7,6 +7,7 @@ import Reader from './pages/Reader'
 import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
 import Admin from './pages/Admin'
+import RequireAuth from './components/RequireAuth'
 
 function App() {
 
@@ -20,9 +21,9 @@ function App() {
           <Route path="/register" element={<Login />} />
           <Route path="/book/:id" element={<BookDetail />} />
           <Route path="/read/:id" element={<Reader />} />
-          <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
+          <Route path="/dashboard" element={<RequireAuth><Dashboard /></RequireAuth>} />
+          <Route path="/admin" element={<RequireAuth role="admin"><Admin /></RequireAuth>} />
         </Routes>
       </main>
     </>

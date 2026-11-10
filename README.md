@@ -38,6 +38,7 @@ npm run dev               # http://localhost:5173
 |---|---|
 | `npm run seed [id ...]` | Add Gutenberg books by ID (default: a list of popular classics). Stores metadata only. |
 | `npm run warm` | Download and split every Gutenberg book into the disk cache (`server/cache`) so first reads are instant. |
+| `npm run create-admin` | Create (or promote) an admin: `ADMIN_EMAIL=you@x.com ADMIN_PASSWORD='...' npm run create-admin`. |
 | `npm run export` | Dump users and books to `server/backups/<timestamp>.json`. |
 
 ## Environment variables
