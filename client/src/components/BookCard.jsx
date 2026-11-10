@@ -7,7 +7,8 @@ import useFavouritesStore from '../store/favouritesStore'
 import { useTheme } from '../context/ThemeContext'
 import { ACCENT, ACCENT_DARK, COLORS } from '../constants'
 
-export default function BookCard({ book }) {
+// showHeart: the favourite button is only shown where asked for (e.g. the dashboard)
+export default function BookCard({ book, showHeart = false }) {
   const { darkMode } = useTheme()
   const colors = COLORS[darkMode ? 'dark' : 'light']
   const accent = darkMode ? ACCENT_DARK : ACCENT
@@ -68,13 +69,13 @@ export default function BookCard({ book }) {
               fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em',
               color: accent, fontFamily: 'Manrope, sans-serif', fontWeight: '600',
             }}>{book.genre}</div>
-            <button onClick={onHeart} aria-label={favourited ? 'Remove from favourites' : 'Add to favourites'} style={{
+            {showHeart && (            <button onClick={onHeart} aria-label={favourited ? 'Remove from favourites' : 'Add to favourites'} style={{
               // padding gives a 32px tap area; the negative margin keeps the row compact
               background: 'none', border: 'none', cursor: 'pointer', padding: '8px',
               margin: '-8px -8px -8px 0', display: 'flex', alignItems: 'center',
             }}>
               <Heart size={16} fill={favourited ? '#e06666' : 'none'} color={favourited ? '#e06666' : colors.muted} />
-            </button>
+            </button>)}
           </div>
           <h3 style={{
             fontFamily: 'Newsreader, serif', fontSize: '18px',
