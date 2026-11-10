@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Lock } from 'lucide-react'
+import { X, Lock, Bookmark } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
 import { ACCENT, ACCENT_DARK, COLORS } from '../constants'
@@ -74,6 +74,11 @@ export default function ChapterPanel({ chapters, currentPage, totalPages, isMobi
                   <div style={{ fontFamily: 'Newsreader, serif', fontSize: '15px', color: colors.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</div>
                 )}
               </div>
+              {i === currentIndex && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'Manrope, sans-serif', fontSize: '11px', fontWeight: 700, color: accent, whiteSpace: 'nowrap' }}>
+                  <Bookmark size={14} fill={accent} /> You are here
+                </span>
+              )}
               {c.locked ? <Lock size={14} color={colors.muted} /> : (
                 <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted }}>p. {c.page}</span>
               )}

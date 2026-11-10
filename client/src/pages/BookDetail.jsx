@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Star, ArrowLeft, Lock, Heart, Plus, Check, ChevronRight } from 'lucide-react'
+import { Star, ArrowLeft, Lock, Heart, Plus, Check, ChevronRight, Bookmark } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
@@ -24,6 +24,7 @@ function BookDetail() {
   const [previewPage, setPreviewPage] = useState(null)
   const [reloadKey, setReloadKey] = useState(0)
   const [chapters, setChapters] = useState([])
+  const [lastPage, setLastPage] = useState(0) // 1-based page the reader stopped on, 0 = never opened
 
   const colors = COLORS[darkMode ? 'dark' : 'light']
   const accent = darkMode ? ACCENT_DARK : ACCENT
@@ -32,13 +33,16 @@ function BookDetail() {
     const fetchBook = async () => {
       try {
         const headers = user ? { Authorization: `Bearer ${user.token}` } : {}
-        const [bookRes, reviewsRes, pageRes, chaptersRes] = await Promise.all([
+        const [bookRes, reviewsRes, pageRes, chaptersRes, profileRes] = await Promise.all([
           axios.get(`${API}/books/${id}`, { headers }),
           axios.get(`${API}/books/${id}/reviews`),
           // preview page — works for both custom and gutenberg books
           axios.get(`${API}/books/${id}/pages/1`).catch(() => ({ data: null })),
           axios.get(`${API}/books/${id}/chapters`, { headers }).catch(() => ({ data: { chapters: [] } })),
+          user ? axios.get(`${API}/user/profile`, { headers }).catch(() => null) : null,
         ])
+        const progress = profileRes?.data?.readingProgress?.find(p => (p.book?._id || p.book) === id)
+        setLastPage(progress?.lastPage || 0)
         setChapters(chaptersRes.data.chapters || [])
         setBook(bookRes.data)
         setReviews(reviewsRes.data)
@@ -104,6 +108,9 @@ function BookDetail() {
 
   if (!book) return null
 
+  // the chapter the reader stopped in = last one starting on or before the saved page
+  const lastReadIndex = lastPage ? chapters.reduce((found, c, i) => (c.page <= lastPage && !c.locked ? i : found), -1) : -1
+
   const chaptersSection = chapters.length > 0 ? (
 
               <div style={{ marginTop: isMobile ? '40px' : '28px' }}>
@@ -113,10 +120,13 @@ function BookDetail() {
                 }}>Chapters ({chapters.length})</span>
                 <div style={{ border: `1px solid ${colors.border}`, borderRadius: '12px', overflowY: 'auto', maxHeight: '360px', backgroundColor: colors.card, overscrollBehavior: 'contain' }} className="chapter-scroll">
                   {chapters.map((c, i, list) => {
+                    const isLastRead = i === lastReadIndex
                     const row = {
                       display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', minHeight: '52px',
                       borderBottom: i < list.length - 1 ? `1px solid ${colors.border}` : 'none',
                       textDecoration: 'none', opacity: c.locked ? 0.55 : 1,
+                      borderLeft: `3px solid ${isLastRead ? accent : 'transparent'}`,
+                      backgroundColor: isLastRead ? (darkMode ? 'rgba(184,132,90,0.12)' : 'rgba(92,51,23,0.06)') : 'transparent',
                     }
                     const inner = (
                       <>
@@ -126,12 +136,17 @@ function BookDetail() {
                             <div style={{ fontFamily: 'Newsreader, serif', fontSize: '15px', color: colors.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</div>
                           )}
                         </div>
+                        {isLastRead && (
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'Manrope, sans-serif', fontSize: '11px', fontWeight: 700, color: accent, whiteSpace: 'nowrap' }}>
+                            <Bookmark size={14} fill={accent} /> Page {lastPage}
+                          </span>
+                        )}
                         {c.locked ? <Lock size={14} color={colors.muted} /> : <ChevronRight size={16} color={colors.muted} />}
                       </>
                     )
                     return c.locked
                       ? <div key={`${c.page}-${i}`} style={row}>{inner}</div>
-                      : <Link key={`${c.page}-${i}`} to={`/read/${book._id}?page=${c.page}`} style={row}>{inner}</Link>
+                      : <Link key={`${c.page}-${i}`} to={`/read/${book._id}?page=${isLastRead ? lastPage : c.page}`} style={row}>{inner}</Link>
                   })}
                 </div>
               </div>
