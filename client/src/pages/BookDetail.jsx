@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { Star, ArrowLeft, Lock, Heart, Plus, Check } from 'lucide-react'
+import { Star, ArrowLeft, Lock, Heart, BookOpen } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
@@ -9,6 +9,7 @@ import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
 import useWindowSize from '../hooks/useWindowSize'
 import ReviewSection from '../components/ReviewSection'
 import ChapterList from '../components/ChapterList'
+import LibraryStatusMenu from '../components/LibraryStatusMenu'
 import useFavouritesStore from '../store/favouritesStore'
 
 function BookDetail() {
@@ -79,17 +80,18 @@ function BookDetail() {
 
   // add/remove a free book from "My Library", and the heart (favourites)
   const authHeaders = { Authorization: `Bearer ${user?.token}` }
-  const toggleLibrary = async () => {
+  // move the book to a folder (Reading, Completed, ...) or unfollow it (status = null)
+  const changeLibraryStatus = async (status) => {
     if (!user) return navigate('/login')
     try {
-      if (book.inLibrary) {
+      if (status === null) {
         await axios.delete(`${API}/user/library/${id}`, { headers: authHeaders })
-        setBook(b => ({ ...b, inLibrary: false }))
+        setBook(b => ({ ...b, libraryStatus: null, inLibrary: false }))
         toast.success('Removed from your library')
       } else {
-        await axios.post(`${API}/user/library/${id}`, {}, { headers: authHeaders })
-        setBook(b => ({ ...b, inLibrary: true }))
-        toast.success('Added to your library')
+        const { data } = await axios.post(`${API}/user/library/${id}`, { status }, { headers: authHeaders })
+        setBook(b => ({ ...b, libraryStatus: data.libraryStatus, inLibrary: true }))
+        toast.success('Library updated')
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Something went wrong')
@@ -131,6 +133,12 @@ function BookDetail() {
     }
   }
 
+  // "Resume Chapter 3" when the reader has already started the book
+  const resumeChapter = lastPage
+    ? chapters.reduce((found, c) => (c.page <= lastPage && !c.locked ? c : found), null)
+    : null
+  const resumeLabel = resumeChapter ? `Resume ${resumeChapter.label || resumeChapter.title}` : lastPage ? `Resume page ${lastPage}` : 'Read Now'
+
   const chaptersSection = chapters.length > 0 ? (
     <ChapterList bookId={book._id} chapters={chapters} lastPage={lastPage}
       bookmarkedPages={bookmarkedPages} onToggleBookmark={toggleChapterBookmark} />
@@ -170,7 +178,7 @@ function BookDetail() {
                 borderRadius: '999px', fontFamily: 'Manrope, sans-serif',
                 fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.08em',
                 fontWeight: '700', textAlign: 'center',
-              }}>Read Now</Link>
+              }}><BookOpen size={16} style={{ verticalAlign: '-3px', marginRight: '8px' }} />{resumeLabel}</Link>
             ) : book.isFree ? (
               <Link to={`/read/${book._id}`} style={{
                 display: 'block', width: '100%', backgroundColor: accent,
@@ -205,17 +213,7 @@ function BookDetail() {
             )}
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-              {book.isFree && (
-                <button onClick={toggleLibrary} style={{
-                  flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-                  backgroundColor: 'transparent', color: accent, border: `1px solid ${accent}`,
-                  padding: '14px', borderRadius: '999px', cursor: 'pointer', minHeight: '44px',
-                  fontFamily: 'Manrope, sans-serif', fontSize: '12px', fontWeight: '700',
-                  textTransform: 'uppercase', letterSpacing: '0.06em',
-                }}>
-                  {book.inLibrary ? <><Check size={16} /> In my library</> : <><Plus size={16} /> Add to my library</>}
-                </button>
-              )}
+              <LibraryStatusMenu status={book.libraryStatus} onChange={changeLibraryStatus} />
               <button onClick={toggleFavourite} aria-label={favourited ? 'Remove from favourites' : 'Add to favourites'} style={{
                 width: '48px', height: '48px', flexShrink: 0, borderRadius: '50%', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',

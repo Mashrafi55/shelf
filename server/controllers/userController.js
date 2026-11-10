@@ -67,29 +67,29 @@ const getLibrary = async (req, res) => {
       Purchase.find({ user: req.user._id }).populate('book'),
       SavedBook.find({ user: req.user._id }).populate('book'),
     ])
+    const statusOf = new Map(saved.filter(x => x.book).map(x => [String(x.book._id), x.status]))
     const seen = new Set()
     const items = [...purchases, ...saved]
       .filter(item => item.book && !seen.has(String(item.book._id)) && seen.add(String(item.book._id)))
       .sort((a, b) => b.createdAt - a.createdAt)
-      .map(item => ({ _id: item._id, book: item.book, createdAt: item.createdAt }))
+      .map(item => ({ _id: item._id, book: item.book, createdAt: item.createdAt, status: statusOf.get(String(item.book._id)) || null }))
     res.json(items)
   } catch (error) {
     res.status(500).json({ message: error.message })
   }
 }
 
-// @POST /api/user/library/:bookId - Add a free book to the library
+// @POST /api/user/library/:bookId { status } - Put a book in a folder (adds it if it is not on the shelf yet)
 const addToLibrary = async (req, res) => {
   try {
     const book = await Book.findById(req.params.bookId)
     if (!book) return res.status(404).json({ message: 'Book not found' })
-    if (!book.isFree) return res.status(400).json({ message: 'Buy this book to add it to your library' })
-    await SavedBook.updateOne(
+    const entry = await SavedBook.findOneAndUpdate(
       { user: req.user._id, book: book._id },
-      { $setOnInsert: { user: req.user._id, book: book._id } },
-      { upsert: true }
+      { $set: { status: req.body.status }, $setOnInsert: { user: req.user._id, book: book._id } },
+      { upsert: true, new: true }
     )
-    res.status(201).json({ message: 'Added to your library', inLibrary: true })
+    res.status(201).json({ message: 'Library updated', inLibrary: true, libraryStatus: entry.status })
   } catch (error) {
     res.status(500).json({ message: 'Something went wrong' })
   }
@@ -202,14 +202,16 @@ const updateProgress = async (req, res) => {
 
     await user.save()
 
-    // reading a free book puts it on the user's shelf automatically
+    // opening a book you can read puts it on your shelf as "Reading"; "Plan to Read" becomes "Reading"
     const book = await Book.findById(bookId).select('isFree')
-    if (book?.isFree) {
+    const owns = book?.isFree || await Purchase.exists({ user: req.user._id, book: bookId })
+    if (owns) {
       await SavedBook.updateOne(
         { user: req.user._id, book: bookId },
-        { $setOnInsert: { user: req.user._id, book: bookId } },
+        { $setOnInsert: { user: req.user._id, book: bookId, status: 'reading' } },
         { upsert: true }
       )
+      await SavedBook.updateOne({ user: req.user._id, book: bookId, status: 'plan_to_read' }, { status: 'reading' })
     }
     res.json({ message: 'Progress saved' })
   } catch (error) {

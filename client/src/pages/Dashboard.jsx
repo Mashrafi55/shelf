@@ -9,7 +9,7 @@ import useWindowSize from '../hooks/useWindowSize'
 import useGridColumns from '../hooks/useGridColumns'
 import BookCard from '../components/BookCard'
 import useFavouritesStore from '../store/favouritesStore'
-import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
+import { API, ACCENT, ACCENT_DARK, COLORS, LIBRARY_STATUSES } from '../constants'
 
 // % read, clamped to 0-100 (imported books keep their page count in totalPages)
 const bookProgress = ({ book, lastPage }) => {
@@ -25,6 +25,7 @@ function Dashboard() {
   const favouriteIds = useFavouritesStore(st => st.ids)
   const [tab, setTab] = useState('library')
   const [library, setLibrary] = useState([])
+  const [folder, setFolder] = useState('all') // library folder filter
   const [favourites, setFavourites] = useState([])
   const [bookmarks, setBookmarks] = useState([])
   const [currentlyReading, setCurrentlyReading] = useState(null)
@@ -66,6 +67,7 @@ function Dashboard() {
       .then(res => setFavourites(res.data))
       .catch(() => {})
   }, [favouriteKey, user])
+  const shownLibrary = library.filter(item => item.book && (folder === 'all' || item.status === folder))
   const shownFavourites = favourites.filter(item => item.book && favouriteIds.includes(item.book._id))
 
   const deleteBookmark = async (id) => {
@@ -176,9 +178,31 @@ function Dashboard() {
               </Link>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: isMobile ? '16px' : '24px' }}>
-              {library.filter(item => item.book).map(({ book }) => <BookCard key={book._id} book={book} />)}
-            </div>
+            <>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '24px' }}>
+                {[{ id: 'all', label: 'All' }, ...LIBRARY_STATUSES].map(f => {
+                  const count = f.id === 'all' ? library.length : library.filter(i => i.status === f.id).length
+                  const active = folder === f.id
+                  return (
+                    <button key={f.id} onClick={() => setFolder(f.id)} style={{
+                      padding: '8px 16px', minHeight: '36px', borderRadius: '999px', cursor: 'pointer',
+                      border: `1px solid ${active ? accent : colors.border}`,
+                      backgroundColor: active ? accent : 'transparent', color: active ? colors.bg : colors.text,
+                      fontFamily: 'Manrope, sans-serif', fontSize: '12px', fontWeight: 600,
+                    }}>{f.label} ({count})</button>
+                  )
+                })}
+              </div>
+              {shownLibrary.length === 0 ? (
+                <p style={{ textAlign: 'center', padding: '48px 8px', fontFamily: 'Newsreader, serif', fontSize: '20px', color: colors.muted, fontStyle: 'italic' }}>
+                  Nothing in this folder yet.
+                </p>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: isMobile ? '16px' : '24px' }}>
+                  {shownLibrary.map(({ book }) => <BookCard key={book._id} book={book} />)}
+                </div>
+              )}
+            </>
           )
         )}
 

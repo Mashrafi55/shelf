@@ -25,3 +25,11 @@ export const GENRES = [
   'Romance', 'Fantasy', 'Thriller', 'Classic', 'Psychology',
   'Business', 'Travel', 'Art', 'Religion', 'Politics',
 ]
+// folders a book can be filed in on the user's shelf
+export const LIBRARY_STATUSES = [
+  { id: 'reading', label: 'Reading' },
+  { id: 'completed', label: 'Completed' },
+  { id: 'on_hold', label: 'On-Hold' },
+  { id: 'plan_to_read', label: 'Plan to Read' },
+  { id: 'dropped', label: 'Dropped' },
+]

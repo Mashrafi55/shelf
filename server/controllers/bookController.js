@@ -103,15 +103,17 @@ const getBook = async (req, res) => {
     // Check if user owns the book
     let owned = false
     let inLibrary = false
+    let libraryStatus = null
     let favourited = false
     if (req.user) {
       const [purchase, saved, fav] = await Promise.all([
         Purchase.findOne({ user: req.user._id, book: book._id }),
-        SavedBook.exists({ user: req.user._id, book: book._id }),
+        SavedBook.findOne({ user: req.user._id, book: book._id }).select('status'),
         Favourite.exists({ user: req.user._id, book: book._id }),
       ])
       owned = !!purchase || book.isFree
       inLibrary = !!purchase || !!saved
+      libraryStatus = saved?.status || null
       favourited = !!fav
     }
 
@@ -123,7 +125,7 @@ const getBook = async (req, res) => {
       bookData.totalPages = Math.max(0, (book.totalPages || 0) - (book.frontPages || 0))
     }
 
-    res.json({ ...bookData, owned, inLibrary, favourited })
+    res.json({ ...bookData, owned, inLibrary, libraryStatus, favourited })
   } catch (error) {
     res.status(500).json({ message: error.message })
   }

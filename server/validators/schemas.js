@@ -33,6 +33,10 @@ const bookmark = z.object({
   note: text(500).optional(),
 })
 
+const libraryStatus = z.object({
+  status: z.enum(['reading', 'completed', 'on_hold', 'plan_to_read', 'dropped']),
+})
+
 const progress = z.object({
   bookId: objectId,
   lastPage: z.coerce.number().int().min(1),
@@ -80,4 +84,4 @@ const bookFields = z.object({
 const addBook = bookFields
 const editBook = bookFields.partial()
 
-module.exports = { changePassword, tokenOnly, forgotPassword, resetPassword, register, login, review, bookmark, progress, profile, genres, addBook, editBook }
+module.exports = { changePassword, tokenOnly, forgotPassword, resetPassword, register, login, review, bookmark, libraryStatus, progress, profile, genres, addBook, editBook }
