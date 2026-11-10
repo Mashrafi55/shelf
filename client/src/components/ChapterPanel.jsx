@@ -69,8 +69,8 @@ export default function ChapterPanel({ chapters, currentPage, totalPages, isMobi
               opacity: c.locked ? 0.55 : 1,
             }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: '13px', fontWeight: 700, color: i === currentIndex ? accent : colors.text }}>{c.label || c.title}</div>
-                {c.label && c.title && (
+                <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: '13px', fontWeight: 700, color: i === currentIndex ? accent : colors.text }}>{c.label || `Chapter ${i + 1}`}</div>
+                {c.title && (
                   <div style={{ fontFamily: 'Newsreader, serif', fontSize: '15px', color: colors.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</div>
                 )}
               </div>
