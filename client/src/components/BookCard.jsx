@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Star } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
@@ -7,6 +8,8 @@ export default function BookCard({ book }) {
   const { darkMode } = useTheme()
   const colors = COLORS[darkMode ? 'dark' : 'light']
   const accent = darkMode ? ACCENT_DARK : ACCENT
+  const [coverFailed, setCoverFailed] = useState(false)
+  const showCover = book.coverImage && !coverFailed
 
   return (
     <Link to={`/book/${book._id}`} style={{ textDecoration: 'none', display: 'block', height: '100%' }}>
@@ -26,9 +29,23 @@ export default function BookCard({ book }) {
         }}
       >
         <div style={{ aspectRatio: '2/3', overflow: 'hidden', backgroundColor: colors.border, flexShrink: 0 }}>
-          <img src={book.coverImage} alt={book.title}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            onError={e => e.target.style.display = 'none'} />
+          {showCover ? (
+            <img src={book.coverImage} alt={book.title} loading="lazy"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              onError={() => setCoverFailed(true)} />
+          ) : (
+            // no cover (or it failed to load): show the title on a plain tile
+            <div style={{
+              width: '100%', height: '100%', display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center', padding: '16px', textAlign: 'center',
+              border: `1px solid ${accent}`, boxSizing: 'border-box', gap: '8px',
+            }}>
+              <span style={{ fontFamily: 'Newsreader, serif', fontSize: '18px', fontStyle: 'italic', color: colors.text, lineHeight: 1.3 }}>
+                {book.title}
+              </span>
+              <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: '11px', color: colors.muted }}>{book.author}</span>
+            </div>
+          )}
         </div>
         <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
           <div style={{
