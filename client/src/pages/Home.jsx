@@ -94,7 +94,7 @@ function Home() {
             padding: '12px 28px', borderRadius: '999px', fontFamily: 'Manrope, sans-serif',
             fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700',
           }}>Start Reading</Link>
-          <Link to="/" style={{
+          <Link to="/browse" style={{
             backgroundColor: 'transparent', color: colors.text, textDecoration: 'none',
             padding: '12px 28px', borderRadius: '999px', fontFamily: 'Manrope, sans-serif',
             fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700',
