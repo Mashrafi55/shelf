@@ -2,10 +2,14 @@ const Book = require('../models/Book')
 const Purchase = require('../models/Purchase')
 const Review = require('../models/Review')
 const SavedBook = require('../models/SavedBook')
+const BookPage = require('../models/BookPage')
 const Favourite = require('../models/Favourite')
 const fetchGutenbergPage = require('../utils/fetchGutenbergPage')
 const { fetchGutenbergChapters } = fetchGutenbergPage
 const { recalcBookRating } = require('../utils/ratings')
+
+// drafts (unpublished books, e.g. fresh uploads) are visible to admins only
+const isHidden = (book, user) => !book.isPublished && user?.role !== 'admin'
 
 // @GET /api/books - Get all published books
 const getBooks = async (req, res) => {
@@ -98,7 +102,7 @@ const getRecommendedBooks = async (req, res) => {
 const getBook = async (req, res) => {
   try {
     const book = await Book.findById(req.params.id)
-    if (!book) return res.status(404).json({ message: 'Book not found' })
+    if (!book || isHidden(book, req.user)) return res.status(404).json({ message: 'Book not found' })
 
     // Check if user owns the book
     let owned = false
@@ -135,7 +139,7 @@ const getBook = async (req, res) => {
 const getBookPage = async (req, res) => {
   try {
     const book = await Book.findById(req.params.id)
-    if (!book) return res.status(404).json({ message: 'Book not found' })
+    if (!book || isHidden(book, req.user)) return res.status(404).json({ message: 'Book not found' })
 
     const pageNumber = parseInt(req.params.pageNumber, 10)
     if (!pageNumber || pageNumber < 1) {
@@ -172,6 +176,19 @@ const getBookPage = async (req, res) => {
       }
     }
 
+    // uploaded book (PDF / EPUB / TXT) — pages live in their own collection
+    if (book.bookType === 'uploaded') {
+      const page = await BookPage.findOne({ book: book._id, pageNumber }).lean()
+      if (!page) return res.status(404).json({ message: 'Page not found' })
+      return res.json({
+        pageNumber,
+        content: page.content,
+        chapterTitle: page.chapterTitle,
+        chapterNumber: page.chapterNumber,
+        totalPages: book.totalPages,
+      })
+    }
+
     // custom book — pages live in MongoDB
     if (book.pages.length && pageNumber > book.pages.length) {
       return res.status(404).json({ message: 'Page not found' })
@@ -198,7 +215,7 @@ const chapterLabel = (number) => (/^[ivxlcdm\d]+$/i.test(number) ? `Chapter ${nu
 const getBookChapters = async (req, res) => {
   try {
     const book = await Book.findById(req.params.id)
-    if (!book) return res.status(404).json({ message: 'Book not found' })
+    if (!book || isHidden(book, req.user)) return res.status(404).json({ message: 'Book not found' })
 
     let owned = false
     if (req.user) {
@@ -216,6 +233,11 @@ const getBookChapters = async (req, res) => {
       } catch (error) {
         return res.status(error.status || 502).json({ message: error.message })
       }
+    } else if (book.bookType === 'uploaded') {
+      totalPages = book.totalPages
+      const rows = await BookPage.find({ book: book._id, $or: [{ chapterNumber: { $ne: '' } }, { chapterTitle: { $ne: '' } }] })
+        .select('pageNumber chapterNumber chapterTitle').sort({ pageNumber: 1 }).lean()
+      raw = rows.map(r => ({ page: r.pageNumber, number: r.chapterNumber, title: r.chapterTitle, front: false }))
     } else {
       totalPages = book.pages.length
       raw = book.pages
@@ -258,7 +280,7 @@ const addReview = async (req, res) => {
   try {
     const { rating, comment } = req.body
     const book = await Book.findById(req.params.id)
-    if (!book) return res.status(404).json({ message: 'Book not found' })
+    if (!book || isHidden(book, req.user)) return res.status(404).json({ message: 'Book not found' })
 
     const existingReview = await Review.findOne({ user: req.user._id, book: book._id })
     if (existingReview) return res.status(400).json({ message: 'You already reviewed this book' })
@@ -311,7 +333,7 @@ const deleteReview = async (req, res) => {
 const purchaseBook = async (req, res) => {
   try {
     const book = await Book.findById(req.params.id)
-    if (!book) return res.status(404).json({ message: 'Book not found' })
+    if (!book || isHidden(book, req.user)) return res.status(404).json({ message: 'Book not found' })
 
     const alreadyPurchased = await Purchase.findOne({
       user: req.user._id,

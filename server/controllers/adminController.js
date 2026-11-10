@@ -2,6 +2,9 @@ const Book = require('../models/Book')
 const User = require('../models/User')
 const Purchase = require('../models/Purchase')
 const Review = require('../models/Review')
+const BookPage = require('../models/BookPage')
+const { parseUpload } = require('../utils/importFile')
+const { generateCover } = require('../utils/gutenberg')
 const { recalcBookRating } = require('../utils/ratings')
 const { searchGutenbergBooks, getGutenbergBook } = require('../utils/gutenberg')
 
@@ -43,6 +46,7 @@ const editBook = async (req, res) => {
 const deleteBook = async (req, res) => {
   try {
     await Book.findByIdAndDelete(req.params.id)
+    await BookPage.deleteMany({ book: req.params.id })
     res.json({ message: 'Book deleted' })
   } catch (error) {
     res.status(500).json({ message: error.message })
@@ -103,6 +107,40 @@ const importGutenberg = async (req, res) => {
   }
 }
 
+// @POST /api/admin/books/upload - Turn an uploaded PDF / EPUB / TXT into a draft book
+// The book is saved unpublished with a generated cover: the admin finishes the details in the edit form.
+const uploadBook = async (req, res) => {
+  if (!req.file) return res.status(400).json({ message: 'Choose a PDF, EPUB or TXT file' })
+  let book
+  try {
+    const parsed = await parseUpload({ buffer: req.file.buffer, filename: req.file.originalname })
+    book = await Book.create({
+      title: parsed.title.slice(0, 200),
+      author: parsed.author.slice(0, 200),
+      description: 'Uploaded book. Edit this description before publishing.',
+      coverImage: generateCover(parsed.title, parsed.author),
+      genre: 'Fiction',
+      price: 0,
+      isFree: true,
+      freePreviewPages: Math.min(4, parsed.pages.length),
+      bookType: 'uploaded',
+      totalPages: parsed.pages.length,
+      isPublished: false,
+    })
+    for (let i = 0; i < parsed.pages.length; i += 200) {
+      await BookPage.insertMany(parsed.pages.slice(i, i + 200).map(p => ({ ...p, book: book._id })))
+    }
+    const chapters = parsed.pages.filter(p => p.chapterNumber || p.chapterTitle).length
+    res.status(201).json({ book, pages: parsed.pages.length, chapters })
+  } catch (error) {
+    if (book) { // don't leave a half-saved book behind
+      await BookPage.deleteMany({ book: book._id }).catch(() => {})
+      await Book.findByIdAndDelete(book._id).catch(() => {})
+    }
+    res.status(error.status || 500).json({ message: error.status ? error.message : 'Could not import this file' })
+  }
+}
+
 // @DELETE /api/admin/reviews/:id - Remove any review (moderation)
 const deleteReview = async (req, res) => {
   try {
@@ -115,4 +153,4 @@ const deleteReview = async (req, res) => {
   }
 }
 
-module.exports = { addBook, editBook, deleteBook, getAllBooks, getAllUsers, getSales, searchGutenberg, importGutenberg, deleteReview }
+module.exports = { addBook, editBook, deleteBook, getAllBooks, getAllUsers, getSales, searchGutenberg, importGutenberg, deleteReview, uploadBook }

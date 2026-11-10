@@ -73,7 +73,7 @@ const bookFields = z.object({
   price: z.coerce.number().min(0).max(100000),
   isFree: z.boolean().optional(),
   freePreviewPages: z.coerce.number().int().min(0).max(1000).optional(),
-  bookType: z.enum(['custom', 'gutenberg']).optional(),
+  bookType: z.enum(['custom', 'gutenberg', 'uploaded']).optional(),
   gutenbergId: z.coerce.string().regex(/^\d*$/, 'Invalid Gutenberg id').optional(),
   totalPages: z.coerce.number().int().min(0).optional(),
   frontPages: z.coerce.number().int().min(0).optional(),

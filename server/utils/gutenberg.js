@@ -461,6 +461,7 @@ const getGutenbergBook = async (id) => {
 
 module.exports = {
   searchGutenbergBooks,
+  generateCover,
   getGutenbergBook,
   // shared internals (reused by on-demand page fetching)
   fetchMeta,
