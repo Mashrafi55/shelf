@@ -1,4 +1,4 @@
-export const API = 'http://localhost:5000/api'
+export const API = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 export const ACCENT = '#5c3317'
 export const ACCENT_DARK = '#b8845a'
 

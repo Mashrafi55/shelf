@@ -10,7 +10,8 @@ connectDB()
 
 const app = express()
 
-app.use(cors({ origin: 'http://localhost:5173', credentials: true }))
+const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173').split(',').map(o => o.trim())
+app.use(cors({ origin: allowedOrigins, credentials: true }))
 app.use(express.json())
 app.use(cookieParser())
 app.use('/api/auth', rateLimit({
