@@ -20,10 +20,28 @@ const readDisk = (file) => {
   try { return JSON.parse(fs.readFileSync(file, 'utf8')) } catch { return null }
 }
 
+// keep the cache bounded: when it grows past the limit, delete least-recently-written files
+const MAX_DISK_BYTES = (Number(process.env.CACHE_MAX_MB) || 500) * 1024 * 1024
+
+const pruneDisk = (keepFile) => {
+  const files = fs.readdirSync(DISK_DIR)
+    .map(name => path.join(DISK_DIR, name))
+    .map(file => ({ file, ...fs.statSync(file) }))
+  let total = files.reduce((sum, f) => sum + f.size, 0)
+  files.sort((a, b) => a.mtimeMs - b.mtimeMs)
+  for (const f of files) {
+    if (total <= MAX_DISK_BYTES) break
+    if (f.file === keepFile) continue
+    fs.unlinkSync(f.file)
+    total -= f.size
+  }
+}
+
 const writeDisk = (file, result) => {
   try {
     fs.mkdirSync(DISK_DIR, { recursive: true })
     fs.writeFileSync(file, JSON.stringify(result))
+    pruneDisk(file)
   } catch { /* cache is best-effort */ }
 }
 

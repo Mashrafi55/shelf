@@ -29,7 +29,7 @@ const addBook = async (req, res) => {
 // @PUT /api/admin/books/:id - Edit a book
 const editBook = async (req, res) => {
   try {
-    const book = await Book.findByIdAndUpdate(req.params.id, req.body, { new: true })
+    const book = await Book.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true })
     if (!book) return res.status(404).json({ message: 'Book not found' })
     res.json(book)
   } catch (error) {

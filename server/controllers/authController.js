@@ -1,5 +1,6 @@
 const User = require('../models/User')
 const jwt = require('jsonwebtoken')
+const { cookieOptions, sessionCookie } = require('../utils/cookieOptions')
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '30d' })
@@ -17,11 +18,7 @@ const register = async (req, res) => {
 
     const token = generateToken(user._id)
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 30 * 24 * 60 * 60 * 1000
-    })
+    res.cookie('token', token, sessionCookie)
 
     res.status(201).json({
       _id: user._id,
@@ -32,7 +29,7 @@ const register = async (req, res) => {
       token
     })
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: 'Something went wrong' })
   }
 }
 
@@ -49,11 +46,7 @@ const login = async (req, res) => {
 
     const token = generateToken(user._id)
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 30 * 24 * 60 * 60 * 1000
-    })
+    res.cookie('token', token, sessionCookie)
 
     res.json({
       _id: user._id,
@@ -64,13 +57,13 @@ const login = async (req, res) => {
       token
     })
   } catch (error) {
-    res.status(500).json({ message: error.message })
+    res.status(500).json({ message: 'Something went wrong' })
   }
 }
 
 // @POST /api/auth/logout
 const logout = async (req, res) => {
-  res.cookie('token', '', { maxAge: 0 })
+  res.clearCookie('token', cookieOptions)
   res.json({ message: 'Logged out successfully' })
 }
 

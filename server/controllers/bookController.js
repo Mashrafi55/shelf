@@ -10,11 +10,15 @@ const getBooks = async (req, res) => {
 
     let query = { isPublished: true }
 
-    if (genre) query.genre = genre
-    if (search) query.$or = [
-      { title: { $regex: search, $options: 'i' } },
-      { author: { $regex: search, $options: 'i' } }
-    ]
+    if (typeof genre === 'string' && genre) query.genre = genre
+    const term = typeof search === 'string' ? search.trim().slice(0, 100) : ''
+    if (term) {
+      const safe = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      query.$or = [
+        { title: { $regex: safe, $options: 'i' } },
+        { author: { $regex: safe, $options: 'i' } }
+      ]
+    }
 
     let sortOption = { createdAt: -1 }
     if (sort === 'popular') sortOption = { purchaseCount: -1 }

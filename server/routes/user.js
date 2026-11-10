@@ -14,17 +14,19 @@ const {
   getCurrentlyReading
 } = require('../controllers/userController')
 const { protect } = require('../middleware/auth')
+const { validate, validateIds } = require('../middleware/validate')
+const schemas = require('../validators/schemas')
 
 router.get('/profile', protect, getProfile)
-router.put('/profile', protect, updateProfile)
-router.put('/genres', protect, updateGenres)
+router.put('/profile', protect, validate(schemas.profile), updateProfile)
+router.put('/genres', protect, validate(schemas.genres), updateGenres)
 router.get('/library', protect, getLibrary)
 router.get('/favourites', protect, getFavourites)
-router.post('/favourites/:bookId', protect, toggleFavourite)
+router.post('/favourites/:bookId', validateIds('bookId'), protect, toggleFavourite)
 router.get('/bookmarks', protect, getBookmarks)
-router.post('/bookmarks', protect, addBookmark)
-router.delete('/bookmarks/:id', protect, deleteBookmark)
-router.put('/progress', protect, updateProgress)
+router.post('/bookmarks', protect, validate(schemas.bookmark), addBookmark)
+router.delete('/bookmarks/:id', validateIds('id'), protect, deleteBookmark)
+router.put('/progress', protect, validate(schemas.progress), updateProgress)
 router.get('/currentlyreading', protect, getCurrentlyReading)
 
 module.exports = router

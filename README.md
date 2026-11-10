@@ -11,7 +11,7 @@ and cached on disk, so each book stays a few KB in the database.
 
 ## Stack
 - **Client:** React 19, Vite, Tailwind 4, react-router, zustand, react-query
-- **Server:** Express 5, Mongoose, JWT, express-rate-limit
+- **Server:** Express 5, Mongoose, JWT, zod validation, helmet, express-rate-limit
 
 ## Setup
 Requires Node 18+ and a MongoDB instance.
@@ -47,4 +47,7 @@ npm run dev               # http://localhost:5173
 | `JWT_SECRET` | server | Secret used to sign login tokens |
 | `PORT` | server | API port (default 5000) |
 | `CLIENT_ORIGIN` | server | Allowed CORS origin(s), comma-separated |
+| `TRUST_PROXY` | server | Set to `1` behind a reverse proxy so rate limits see real IPs |
+| `COOKIE_SAMESITE` | server | `lax` (default) or `none` for cross-site hosting over https |
+| `CACHE_MAX_MB` | server | Size cap for the Gutenberg disk cache (default 500) |
 | `VITE_API_URL` | client | API base URL (default `http://localhost:5000/api`) |

@@ -124,7 +124,8 @@ const addBookmark = async (req, res) => {
 // @DELETE /api/user/bookmarks/:id
 const deleteBookmark = async (req, res) => {
   try {
-    await Bookmark.findByIdAndDelete(req.params.id)
+    const deleted = await Bookmark.findOneAndDelete({ _id: req.params.id, user: req.user._id })
+    if (!deleted) return res.status(404).json({ message: 'Bookmark not found' })
     res.json({ message: 'Bookmark removed' })
   } catch (error) {
     res.status(500).json({ message: error.message })
