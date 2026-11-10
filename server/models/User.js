@@ -15,6 +15,11 @@ const userSchema = new mongoose.Schema({
     updatedAt: { type: Date, default: Date.now }
   }],
   onboardingComplete: { type: Boolean, default: false },
+  emailVerified: { type: Boolean, default: false },
+  emailVerifyToken: { type: String, select: false },
+  emailVerifyExpires: { type: Date, select: false },
+  passwordResetToken: { type: String, select: false },
+  passwordResetExpires: { type: Date, select: false },
 }, { timestamps: true })
 
 userSchema.pre('save', async function() {

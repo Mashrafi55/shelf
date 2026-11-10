@@ -6,7 +6,7 @@ and cached on disk, so each book stays a few KB in the database.
 
 ## Features
 - Browse, search and read books with chapter headings and a dark/light theme
-- Accounts with JWT (httpOnly cookie), genre onboarding, bookmarks, favourites and reviews
+- Accounts with JWT (httpOnly cookie), email verification, password reset, genre onboarding, bookmarks, favourites and reviews
 - Admin panel: add books, edit chapter titles, search and import from Project Gutenberg
 
 ## Stack
@@ -50,5 +50,6 @@ npm run dev               # http://localhost:5173
 | `CLIENT_ORIGIN` | server | Allowed CORS origin(s), comma-separated |
 | `TRUST_PROXY` | server | Set to `1` behind a reverse proxy so rate limits see real IPs |
 | `COOKIE_SAMESITE` | server | `lax` (default) or `none` for cross-site hosting over https |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM` | server | Email settings for verification and password reset. Without `SMTP_HOST`, emails are printed to the server console. |
 | `CACHE_MAX_MB` | server | Size cap for the Gutenberg disk cache (default 500) |
 | `VITE_API_URL` | client | API base URL (default `http://localhost:5000/api`) |

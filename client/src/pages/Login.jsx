@@ -131,6 +131,13 @@ function Login() {
             </button>
           </div>
 
+          {tab === 'login' && (
+            <Link to="/forgot-password" style={{
+              fontFamily: 'Manrope, sans-serif', fontSize: '13px', color: colors.muted,
+              textAlign: 'right', marginTop: '-8px', textDecoration: 'underline',
+            }}>Forgot password?</Link>
+          )}
+
           <button onClick={handleSubmit} disabled={loading} style={{
             width: '100%', backgroundColor: accent, color: colors.bg, border: 'none',
             borderRadius: '999px', padding: '14px', fontFamily: 'Manrope, sans-serif',

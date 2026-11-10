@@ -16,6 +16,12 @@ const login = z.object({
   password: z.string().min(1, 'Password is required').max(200),
 })
 
+const tokenOnly = z.object({ token: z.string().regex(/^[a-f\d]{64}$/i, 'Invalid or expired link') })
+const forgotPassword = z.object({ email: z.string().trim().toLowerCase().max(254) })
+const resetPassword = tokenOnly.extend({
+  password: z.string().min(8, 'Password must be at least 8 characters').max(72, 'Password is too long'),
+})
+
 const review = z.object({
   rating: z.coerce.number().int().min(1).max(5),
   comment: text(2000).optional(),
@@ -69,4 +75,4 @@ const bookFields = z.object({
 const addBook = bookFields
 const editBook = bookFields.partial()
 
-module.exports = { register, login, review, bookmark, progress, profile, genres, addBook, editBook }
+module.exports = { tokenOnly, forgotPassword, resetPassword, register, login, review, bookmark, progress, profile, genres, addBook, editBook }
