@@ -100,8 +100,10 @@ const fetchText = async (meta) => {
 const cleanText = (raw) => {
   let text = raw.replace(/\r\n/g, '\n')
   const start = text.match(/\*\*\*\s*START OF (?:THE|THIS) PROJECT GUTENBERG EBOOK[^*]*?\*\*\*/i)
-  const end = text.match(/\*\*\*\s*END OF (?:THE|THIS) PROJECT GUTENBERG EBOOK/i)
   if (start) text = text.slice(start.index + start[0].length)
+  // look for the end marker only AFTER cutting the start: its position in the shortened text is
+  // not the position it had in the original (this used to leave the licence text on the last page)
+  const end = text.match(/\*\*\*\s*END OF (?:THE|THIS) PROJECT GUTENBERG EBOOK/i)
   if (end) text = text.slice(0, end.index)
   // scanned-edition artwork markers, e.g. "[Illustration: ...]" (can span lines)
   // (captions may contain one level of nested brackets, e.g. "[Copyright 1894 by George Allen.]")
