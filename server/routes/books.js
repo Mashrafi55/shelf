@@ -6,6 +6,7 @@ const {
   getTopRatedBooks,
   getRecommendedBooks,
   getBook,
+  getBookPage,
   getBookReviews,
   addReview,
   purchaseBook
@@ -17,6 +18,7 @@ router.get('/popular', getPopularBooks)
 router.get('/toprated', getTopRatedBooks)
 router.get('/recommended', protect, getRecommendedBooks)
 router.get('/:id', optionalProtect, getBook)
+router.get('/:id/pages/:pageNumber', optionalProtect, getBookPage)
 router.get('/:id/reviews', getBookReviews)
 router.post('/:id/reviews', protect, addReview)
 router.post('/:id/purchase', protect, purchaseBook)

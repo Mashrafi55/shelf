@@ -6,7 +6,9 @@ const {
   deleteBook,
   getAllBooks,
   getAllUsers,
-  getSales
+  getSales,
+  searchGutenberg,
+  importGutenberg
 } = require('../controllers/adminController')
 const { protect } = require('../middleware/auth')
 const { isAdmin } = require('../middleware/isAdmin')
@@ -19,5 +21,7 @@ router.put('/books/:id', editBook)
 router.delete('/books/:id', deleteBook)
 router.get('/users', getAllUsers)
 router.get('/sales', getSales)
+router.get('/gutenberg/search', searchGutenberg)
+router.post('/gutenberg/import/:id', importGutenberg)
 
 module.exports = router

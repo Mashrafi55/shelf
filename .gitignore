@@ -2,4 +2,7 @@ node_modules/
 .env
 *.log
 dist/
+server/cache/
 .DS_Store
+
+server/backups/

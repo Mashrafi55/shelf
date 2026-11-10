@@ -9,6 +9,11 @@ const bookSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   isFree: { type: Boolean, default: false },
   freePreviewPages: { type: Number, default: 3 },
+  bookType: { type: String, enum: ['custom', 'gutenberg'], default: 'custom' },
+  gutenbergId: { type: String, default: '' },
+  totalPages: { type: Number, default: 0 },
+  frontPages: { type: Number, default: 0 }, // author's preface pages at the start (gutenberg books)
+  // pages array used by custom books only — gutenberg pages are fetched on demand
   pages: [{
     pageNumber: Number,
     chapterTitle: { type: String, default: '' },
