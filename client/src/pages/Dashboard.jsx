@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
 import useAuthStore from '../store/authStore'
 import useWindowSize from '../hooks/useWindowSize'
+import useGridColumns from '../hooks/useGridColumns'
 import BookCard from '../components/BookCard'
 import useFavouritesStore from '../store/favouritesStore'
 import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
@@ -20,6 +21,7 @@ function Dashboard() {
   const { darkMode } = useTheme()
   const { user } = useAuthStore()
   const { isMobile } = useWindowSize()
+  const columns = useGridColumns()
   const favouriteIds = useFavouritesStore(st => st.ids)
   const [tab, setTab] = useState('library')
   const [library, setLibrary] = useState([])
@@ -174,7 +176,7 @@ function Dashboard() {
               </Link>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? '16px' : '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: isMobile ? '16px' : '24px' }}>
               {library.filter(item => item.book).map(({ book }) => <BookCard key={book._id} book={book} />)}
             </div>
           )
@@ -191,7 +193,7 @@ function Dashboard() {
               </Link>
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? '16px' : '24px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: isMobile ? '16px' : '24px' }}>
               {shownFavourites.map(({ book }) => <BookCard key={book._id} book={book} />)}
             </div>
           )

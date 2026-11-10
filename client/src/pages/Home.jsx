@@ -4,12 +4,14 @@ import axios from 'axios'
 import { useTheme } from '../context/ThemeContext'
 import useAuthStore from '../store/authStore'
 import useWindowSize from '../hooks/useWindowSize'
+import useGridColumns from '../hooks/useGridColumns'
 import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
 import BookCard from '../components/BookCard'
 
 function Section({ title, books }) {
   const { darkMode } = useTheme()
   const { isMobile } = useWindowSize()
+  const columns = useGridColumns()
   const colors = COLORS[darkMode ? 'dark' : 'light']
   const accent = darkMode ? ACCENT_DARK : ACCENT
 
@@ -22,7 +24,7 @@ function Section({ title, books }) {
           letterSpacing: '0.05em', color: accent, textDecoration: 'none', fontWeight: '600',
         }}>View all →</Link>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(160px, 1fr))', gap: isMobile ? '16px' : '24px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: isMobile ? '16px' : '24px' }}>
         {books.map(book => <BookCard key={book._id} book={book} />)}
       </div>
     </section>
@@ -80,9 +82,10 @@ function GenreChips({ genres }) {
 function Skeletons() {
   const { darkMode } = useTheme()
   const { isMobile } = useWindowSize()
+  const columns = useGridColumns()
   const colors = COLORS[darkMode ? 'dark' : 'light']
   return (
-    <div aria-label="Loading books" style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(160px, 1fr))', gap: isMobile ? '16px' : '24px' }}>
+    <div aria-label="Loading books" style={{ display: 'grid', gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`, gap: isMobile ? '16px' : '24px' }}>
       {Array.from({ length: 6 }, (_, i) => (
         <div key={i} style={{ borderRadius: '12px', border: `1px solid ${colors.border}`, overflow: 'hidden', backgroundColor: colors.card }}>
           <div style={{ aspectRatio: '2/3', backgroundColor: colors.border, opacity: 0.5 }} />

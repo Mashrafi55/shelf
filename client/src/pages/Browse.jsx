@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext'
 import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
 import BookCard from '../components/BookCard'
 import useWindowSize from '../hooks/useWindowSize'
+import useGridColumns from '../hooks/useGridColumns'
 
 const font = 'Manrope, sans-serif'
 const SORTS = [
@@ -21,6 +22,7 @@ const SORTS = [
 function Browse() {
   const { darkMode } = useTheme()
   const { isMobile } = useWindowSize()
+  const columns = useGridColumns()
   const colors = COLORS[darkMode ? 'dark' : 'light']
   const accent = darkMode ? ACCENT_DARK : ACCENT
   const [params, setParams] = useSearchParams()
@@ -107,7 +109,7 @@ function Browse() {
         ) : (
           <div style={{
             display: 'grid', gap: isMobile ? '16px' : '24px',
-            gridTemplateColumns: `repeat(auto-fill, minmax(${isMobile ? '130px' : '200px'}, 1fr))`,
+            gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
           }}>
             {data.books.map(book => <BookCard key={book._id} book={book} />)}
           </div>
