@@ -24,7 +24,7 @@ export default function Footer() {
   return (
     <footer style={{ borderTop: `1px solid ${colors.border}`, backgroundColor: colors.bg, marginTop: '48px' }}>
       <div style={{
-        maxWidth: '1280px', margin: '0 auto', padding: '48px 24px 32px',
+        maxWidth: '1280px', margin: '0 auto', padding: isMobile ? '32px 16px 24px' : '48px 24px 32px',
         display: 'grid', gap: '40px',
         gridTemplateColumns: isMobile ? '1fr 1fr' : '2fr 1fr 1fr',
       }}>
@@ -67,7 +67,7 @@ export default function Footer() {
 
       <div style={{ borderTop: `1px solid ${colors.border}` }}>
         <div style={{
-          maxWidth: '1280px', margin: '0 auto', padding: '20px 24px',
+          maxWidth: '1280px', margin: '0 auto', padding: isMobile ? '16px' : '20px 24px',
           display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px',
         }}>
           <span style={{ ...link, fontSize: '12px' }}>© {new Date().getFullYear()} Shelf</span>

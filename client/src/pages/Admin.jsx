@@ -661,9 +661,9 @@ function Admin() {
               </div>
               <div>
                 <label style={labelStyle}>Cover Image *</label>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
                   <input name="coverImage" value={form.coverImage?.startsWith('data:') ? '' : form.coverImage}
-                    onChange={handleFormChange} style={{ ...inputStyle, flex: 1, minWidth: 0 }}
+                    onChange={handleFormChange} style={{ ...inputStyle, flex: '1 1 180px', minWidth: 0 }}
                     placeholder={form.coverImage?.startsWith('data:') ? 'Generated cover in use. Paste a link or upload to replace it' : 'Paste an image link, or upload one'} />
                   <input ref={coverInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleCoverUpload} style={{ display: 'none' }} />
                   <button type="button" onClick={() => coverInputRef.current?.click()} disabled={coverUploading} style={{
