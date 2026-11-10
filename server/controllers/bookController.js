@@ -27,10 +27,30 @@ const getBooks = async (req, res) => {
     if (sort === 'price_low') sortOption = { price: 1 }
     if (sort === 'price_high') sortOption = { price: -1 }
 
-    const books = await Book.find(query).sort(sortOption)
-    res.json(books)
+    // paginated: ?page=1&limit=12 (limit is capped so one request can't pull the whole catalogue)
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 12, 1), 48)
+    const total = await Book.countDocuments(query)
+    const pages = Math.max(Math.ceil(total / limit), 1)
+    const page = Math.min(Math.max(parseInt(req.query.page, 10) || 1, 1), pages)
+
+    const books = await Book.find(query)
+      .select('-pages')
+      .sort({ ...sortOption, _id: -1 }) // _id breaks ties so pages never overlap
+      .skip((page - 1) * limit)
+      .limit(limit)
+    res.json({ books, total, page, pages })
   } catch (error) {
     res.status(500).json({ message: error.message })
+  }
+}
+
+// @GET /api/books/genres - Genres that have at least one published book
+const getGenres = async (req, res) => {
+  try {
+    const genres = await Book.distinct('genre', { isPublished: true })
+    res.json(genres.filter(Boolean).sort())
+  } catch (error) {
+    res.status(500).json({ message: 'Something went wrong' })
   }
 }
 
@@ -253,6 +273,7 @@ const purchaseBook = async (req, res) => {
 
 module.exports = {
   getBooks,
+  getGenres,
   getPopularBooks,
   getTopRatedBooks,
   getRecommendedBooks,

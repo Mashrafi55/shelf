@@ -7,6 +7,7 @@ import Reader from './pages/Reader'
 import Onboarding from './pages/Onboarding'
 import Dashboard from './pages/Dashboard'
 import Admin from './pages/Admin'
+import Browse from './pages/Browse'
 import RequireAuth from './components/RequireAuth'
 import VerifyBanner from './components/VerifyBanner'
 import ForgotPassword from './pages/ForgotPassword'
@@ -22,6 +23,7 @@ function App() {
       <main style={{ paddingTop: '64px' }}>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/browse" element={<Browse />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />

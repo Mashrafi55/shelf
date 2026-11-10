@@ -42,7 +42,7 @@ function Navbar() {
         {/* Desktop Nav */}
         {!isMobile && (
           <nav style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-            <Link to="/" style={{
+            <Link to="/browse" style={{
               fontFamily: 'Manrope, sans-serif', fontSize: '13px',
               textTransform: 'uppercase', letterSpacing: '0.05em',
               color: colors.text, textDecoration: 'none', fontWeight: '600',
@@ -123,7 +123,7 @@ function Navbar() {
           backgroundColor: colors.bg, borderTop: `1px solid ${colors.border}`,
           padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px',
         }}>
-          <Link to="/" onClick={() => setMenuOpen(false)} style={{
+          <Link to="/browse" onClick={() => setMenuOpen(false)} style={{
             fontFamily: 'Manrope, sans-serif', fontSize: '14px',
             textTransform: 'uppercase', letterSpacing: '0.05em',
             color: colors.text, textDecoration: 'none', fontWeight: '600',

@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const {
   getBooks,
+  getGenres,
   getPopularBooks,
   getTopRatedBooks,
   getRecommendedBooks,
@@ -19,6 +20,7 @@ const { pageLimiter, writeLimiter } = require('../middleware/rateLimiters')
 const schemas = require('../validators/schemas')
 
 router.get('/', getBooks)
+router.get('/genres', getGenres)
 router.get('/popular', getPopularBooks)
 router.get('/toprated', getTopRatedBooks)
 router.get('/recommended', protect, getRecommendedBooks)
