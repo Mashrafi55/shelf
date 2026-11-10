@@ -159,6 +159,17 @@ function Admin() {
     }
   }
 
+  // make a draft visible to readers (the details can still be edited afterwards)
+  const handlePublish = async (book) => {
+    try {
+      await axios.put(`${API}/admin/books/${book._id}`, { isPublished: true }, { headers })
+      toast.success(`"${book.title}" is now published`)
+      fetchAll()
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Could not publish')
+    }
+  }
+
   const handleDelete = async (id) => {
     if (!confirm('Delete this book?')) return
     try {
@@ -383,6 +394,13 @@ function Admin() {
                     <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted }}>{book.author} · {book.genre} · {book.isFree ? 'Free' : `$${book.price}`} · {book.bookType === 'gutenberg' ? '⚡ on-demand' : book.bookType === 'uploaded' ? 'uploaded' : ''} {book.totalPages || book.pages.length} pages</p>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
+                    {book.isPublished === false && (
+                      <button onClick={() => handlePublish(book)} style={{
+                        backgroundColor: accent, color: colors.bg, border: 'none', borderRadius: '8px',
+                        padding: '0 14px', cursor: 'pointer', fontFamily: 'Manrope, sans-serif', fontSize: '11px',
+                        fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em',
+                      }}>Publish</button>
+                    )}
                     <button onClick={() => openEdit(book)} style={{
                       background: 'none', border: `1px solid ${colors.border}`, borderRadius: '8px',
                       padding: '12px', cursor: 'pointer', color: colors.muted, display: 'flex', alignItems: 'center',
