@@ -7,12 +7,12 @@ import useFavouritesStore from '../store/favouritesStore'
 import { useTheme } from '../context/ThemeContext'
 import { ACCENT, ACCENT_DARK, COLORS } from '../constants'
 
-// showHeart: the favourite button is only shown where asked for (e.g. the dashboard)
-export default function BookCard({ book, showHeart = false }) {
+export default function BookCard({ book }) {
   const { darkMode } = useTheme()
   const colors = COLORS[darkMode ? 'dark' : 'light']
   const accent = darkMode ? ACCENT_DARK : ACCENT
   const [coverFailed, setCoverFailed] = useState(false)
+  const [hovered, setHovered] = useState(false)
   const navigate = useNavigate()
   const user = useAuthStore(s => s.user)
   const favourited = useFavouritesStore(s => s.ids.includes(book._id))
@@ -36,15 +36,26 @@ export default function BookCard({ book, showHeart = false }) {
         cursor: 'pointer',
       }}
         onMouseEnter={e => {
+          setHovered(true)
           e.currentTarget.style.transform = 'translateY(-4px)'
           e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.12)'
         }}
         onMouseLeave={e => {
+          setHovered(false)
           e.currentTarget.style.transform = 'translateY(0)'
           e.currentTarget.style.boxShadow = 'none'
         }}
       >
-        <div style={{ aspectRatio: '2/3', overflow: 'hidden', backgroundColor: colors.border, flexShrink: 0 }}>
+        <div style={{ aspectRatio: '2/3', overflow: 'hidden', backgroundColor: colors.border, flexShrink: 0, position: 'relative' }}>
+          {/* heart appears on hover, top-right of the cover */}
+          <button onClick={onHeart} aria-label={favourited ? 'Remove from favourites' : 'Add to favourites'} tabIndex={hovered ? 0 : -1} style={{
+            position: 'absolute', top: '8px', right: '8px', zIndex: 1, width: '36px', height: '36px',
+            borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backgroundColor: 'rgba(0,0,0,0.5)', transition: 'opacity 0.2s ease',
+            opacity: hovered ? 1 : 0, pointerEvents: hovered ? 'auto' : 'none',
+          }}>
+            <Heart size={16} fill={favourited ? '#e06666' : 'none'} color={favourited ? '#e06666' : '#fff'} />
+          </button>
           {showCover ? (
             <img src={book.coverImage} alt={book.title} loading="lazy"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
@@ -64,19 +75,10 @@ export default function BookCard({ book, showHeart = false }) {
           )}
         </div>
         <div style={{ padding: '16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-            <div style={{
-              fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em',
-              color: accent, fontFamily: 'Manrope, sans-serif', fontWeight: '600',
-            }}>{book.genre}</div>
-            {showHeart && (            <button onClick={onHeart} aria-label={favourited ? 'Remove from favourites' : 'Add to favourites'} style={{
-              // padding gives a 32px tap area; the negative margin keeps the row compact
-              background: 'none', border: 'none', cursor: 'pointer', padding: '8px',
-              margin: '-8px -8px -8px 0', display: 'flex', alignItems: 'center',
-            }}>
-              <Heart size={16} fill={favourited ? '#e06666' : 'none'} color={favourited ? '#e06666' : colors.muted} />
-            </button>)}
-          </div>
+          <div style={{
+            fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.08em',
+            color: accent, fontFamily: 'Manrope, sans-serif', marginBottom: '6px', fontWeight: '600',
+          }}>{book.genre}</div>
           <h3 style={{
             fontFamily: 'Newsreader, serif', fontSize: '18px',
             color: colors.text, marginBottom: '4px', lineHeight: '1.3',

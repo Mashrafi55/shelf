@@ -175,7 +175,7 @@ function Dashboard() {
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? '16px' : '24px' }}>
-              {library.filter(item => item.book).map(({ book }) => <BookCard key={book._id} book={book} showHeart />)}
+              {library.filter(item => item.book).map(({ book }) => <BookCard key={book._id} book={book} />)}
             </div>
           )
         )}
@@ -192,7 +192,7 @@ function Dashboard() {
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? '16px' : '24px' }}>
-              {shownFavourites.map(({ book }) => <BookCard key={book._id} book={book} showHeart />)}
+              {shownFavourites.map(({ book }) => <BookCard key={book._id} book={book} />)}
             </div>
           )
         )}
