@@ -70,6 +70,14 @@ export default function ChapterList({ bookId, chapters, lastPage, bookmarkedPage
           const bookmarked = bookmarkedPages.has(c.page)
           const labelColor = c.locked ? colors.muted : isRead ? colors.muted : accent
 
+          // running number (1, 2, 3...) so every chapter has one, even titled-only ones
+          const num = (
+            <span style={{
+              minWidth: '26px', textAlign: 'right', flexShrink: 0, fontFamily: 'Manrope, sans-serif',
+              fontSize: '12px', fontWeight: 700, fontVariantNumeric: 'tabular-nums',
+              color: isRead || c.locked ? colors.muted : accent,
+            }}>{i + 1}</span>
+          )
           const text = (
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
@@ -95,6 +103,7 @@ export default function ChapterList({ bookId, chapters, lastPage, bookmarkedPage
             <div key={`${c.page}-${i}`} style={rowStyle}>
               {c.locked ? (
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 8px 10px 13px', opacity: 0.6 }}>
+                  {num}
                   {text}
                   <Lock size={14} color={colors.muted} />
                 </div>
@@ -103,6 +112,7 @@ export default function ChapterList({ bookId, chapters, lastPage, bookmarkedPage
                   flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '8px',
                   padding: '10px 0 10px 13px', textDecoration: 'none',
                 }}>
+                  {num}
                   {text}
                   <span style={{
                     fontFamily: 'Manrope, sans-serif', fontSize: '12px', whiteSpace: 'nowrap',
