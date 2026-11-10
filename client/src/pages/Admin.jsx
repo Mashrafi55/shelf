@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Edit, Trash2, Users, BookOpen, DollarSign, X } from 'lucide-react'
+import { Plus, Edit, Trash2, Users, BookOpen, DollarSign, X, Download, Search, Loader2 } from 'lucide-react'
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
@@ -19,9 +19,15 @@ function Admin() {
   const [showForm, setShowForm] = useState(false)
   const [editingBook, setEditingBook] = useState(null)
   const [genreOpen, setGenreOpen] = useState(false)
+  const [showImport, setShowImport] = useState(false)
+  const [importQuery, setImportQuery] = useState('')
+  const [importResults, setImportResults] = useState([])
+  const [importLoading, setImportLoading] = useState(false)
+  const [importingId, setImportingId] = useState(null)
   const [form, setForm] = useState({
     title: '', author: '', description: '', coverImage: '',
-    genre: 'Fiction', price: '', isFree: false, freePreviewPages: 3,
+    genre: 'Fiction', price: '', isFree: false, freePreviewPages: 4,
+    bookType: 'custom', gutenbergId: '', totalPages: 0, frontPages: 0,
     pages: [{ pageNumber: 1, chapterNumber: '', chapterTitle: '', content: '' }]
   })
 
@@ -78,7 +84,8 @@ function Admin() {
     setEditingBook(null)
     setForm({
       title: '', author: '', description: '', coverImage: '',
-      genre: 'Fiction', price: '', isFree: false, freePreviewPages: 3,
+      genre: 'Fiction', price: '', isFree: false, freePreviewPages: 4,
+      bookType: 'custom', gutenbergId: '', totalPages: 0, frontPages: 0,
       pages: [{ pageNumber: 1, chapterNumber: '', chapterTitle: '', content: '' }]
     })
     setShowForm(true)
@@ -90,7 +97,11 @@ function Admin() {
       title: book.title, author: book.author, description: book.description,
       coverImage: book.coverImage, genre: book.genre, price: book.price,
       isFree: book.isFree, freePreviewPages: book.freePreviewPages,
-      pages: book.pages.length > 0
+      bookType: book.bookType || 'custom',
+      gutenbergId: book.gutenbergId || '',
+      frontPages: book.frontPages || 0,
+      totalPages: book.totalPages || (book.pages?.length || 0),
+      pages: (book.pages?.length || 0) > 0
         ? book.pages.map(p => ({ chapterNumber: '', chapterTitle: '', ...p }))
         : [{ pageNumber: 1, chapterNumber: '', chapterTitle: '', content: '' }]
     })
@@ -102,7 +113,13 @@ function Admin() {
       return toast.error('Please fill all required fields')
     }
     try {
-      const payload = { ...form, price: form.isFree ? 0 : Number(form.price) }
+      const isGutenberg = form.bookType === 'gutenberg'
+      const payload = {
+        ...form,
+        price: form.isFree ? 0 : Number(form.price),
+        // gutenberg books never store pages — they are fetched on demand
+        ...(isGutenberg ? {} : { pages: form.pages }),
+      }
       if (editingBook) {
         await axios.put(`${API}/admin/books/${editingBook._id}`, payload, { headers })
         toast.success('Book updated!')
@@ -125,6 +142,52 @@ function Admin() {
       setBooks(prev => prev.filter(b => b._id !== id))
     } catch {
       toast.error('Could not delete book')
+    }
+  }
+
+  const openImport = () => {
+    setImportQuery('')
+    setImportResults([])
+    setShowImport(true)
+  }
+
+  const handleGutenbergSearch = async (e) => {
+    e.preventDefault()
+    if (!importQuery.trim()) return
+    setImportLoading(true)
+    try {
+      const { data } = await axios.get(`${API}/admin/gutenberg/search`, {
+        params: { q: importQuery }, headers,
+      })
+      setImportResults(data)
+      if (data.length === 0) toast.error('No books found')
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Search failed')
+    } finally {
+      setImportLoading(false)
+    }
+  }
+
+  const handleGutenbergImport = async (id) => {
+    setImportingId(id)
+    try {
+      const { data } = await axios.post(`${API}/admin/gutenberg/import/${id}`, {}, { headers })
+      setEditingBook(null)
+      setForm({
+        title: data.title, author: data.author, description: data.description,
+        coverImage: data.coverImage, genre: GENRES.includes(data.genre) ? data.genre : 'Fiction',
+        price: '', isFree: false, freePreviewPages: data.freePreviewPages,
+        // gutenberg books store metadata only — pages are fetched on demand at read time
+        bookType: 'gutenberg', gutenbergId: data.gutenbergId, totalPages: data.totalPages, frontPages: data.frontPages || 0,
+        pages: [],
+      })
+      setShowImport(false)
+      setShowForm(true)
+      toast.success(`Imported ${data.totalPages} pages — review and save!`)
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Import failed')
+    } finally {
+      setImportingId(null)
     }
   }
 
@@ -206,7 +269,16 @@ function Admin() {
 
         {tab === 'books' && (
           <div>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginBottom: '24px' }}>
+              <button onClick={openImport} style={{
+                backgroundColor: 'transparent', color: accent, border: `1px solid ${accent}`,
+                padding: '10px 20px', borderRadius: '999px', cursor: 'pointer',
+                fontFamily: 'Manrope, sans-serif', fontSize: '13px',
+                textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700',
+                display: 'flex', alignItems: 'center', gap: '8px',
+              }}>
+                <Download size={16} /> Import from Gutenberg
+              </button>
               <button onClick={openAdd} style={{
                 backgroundColor: accent, color: colors.bg, border: 'none',
                 padding: '10px 20px', borderRadius: '999px', cursor: 'pointer',
@@ -229,7 +301,7 @@ function Admin() {
                   </div>
                   <div style={{ flex: 1 }}>
                     <p style={{ fontFamily: 'Newsreader, serif', fontSize: '18px', color: colors.text }}>{book.title}</p>
-                    <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted }}>{book.author} · {book.genre} · {book.isFree ? 'Free' : `$${book.price}`} · {book.pages.length} pages</p>
+                    <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted }}>{book.author} · {book.genre} · {book.isFree ? 'Free' : `$${book.price}`} · {book.bookType === 'gutenberg' ? '⚡ on-demand' : ''} {book.totalPages || book.pages.length} pages</p>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={() => openEdit(book)} style={{
@@ -304,6 +376,106 @@ function Admin() {
           </div>
         )}
       </div>
+
+      {showImport && (
+        <div style={{
+          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.7)',
+          zIndex: 100, display: 'flex', alignItems: 'flex-start',
+          justifyContent: 'center', padding: '24px', overflowY: 'auto',
+        }}>
+          <div style={{
+            backgroundColor: colors.bg, borderRadius: '16px', padding: '40px',
+            width: '100%', maxWidth: '560px', border: `1px solid ${colors.border}`, margin: 'auto',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h2 style={{ fontFamily: 'Newsreader, serif', fontSize: '28px', color: colors.text, fontWeight: '400' }}>
+                Import from Gutenberg
+              </h2>
+              <button onClick={() => setShowImport(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: colors.muted }}>
+                <X size={20} />
+              </button>
+            </div>
+            <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '13px', color: colors.muted, marginBottom: '24px' }}>
+              Search 70,000+ public-domain classics. Pick one and we'll split it into pages for you.
+            </p>
+
+            <form onSubmit={handleGutenbergSearch} style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+              <input
+                value={importQuery}
+                onChange={e => setImportQuery(e.target.value)}
+                placeholder='Try "sherlock holmes" or "frankenstein"...'
+                autoFocus
+                style={{
+                  flex: 1, border: `1px solid ${colors.border}`, borderRadius: '999px',
+                  padding: '12px 18px', backgroundColor: colors.card,
+                  fontFamily: 'Manrope, sans-serif', fontSize: '14px',
+                  color: colors.text, outline: 'none',
+                }}
+              />
+              <button type="submit" disabled={importLoading} style={{
+                backgroundColor: accent, color: colors.bg, border: 'none',
+                padding: '12px 18px', borderRadius: '999px', cursor: importLoading ? 'wait' : 'pointer',
+                display: 'flex', alignItems: 'center', gap: '6px',
+                fontFamily: 'Manrope, sans-serif', fontSize: '13px', fontWeight: '700',
+              }}>
+                {importLoading ? <Loader2 size={16} className="spin" /> : <Search size={16} />}
+                {importLoading ? '' : 'Search'}
+              </button>
+            </form>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {importResults.map(r => (
+                <div key={r.id} style={{
+                  display: 'flex', alignItems: 'center', gap: '14px',
+                  backgroundColor: colors.card, border: `1px solid ${colors.border}`,
+                  borderRadius: '12px', padding: '12px 14px',
+                }}>
+                  <div style={{
+                    width: '44px', height: '66px', borderRadius: '4px', overflow: 'hidden',
+                    backgroundColor: colors.border, flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {r.cover
+                      ? <img src={r.cover} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : <BookOpen size={16} color={colors.muted} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{
+                      fontFamily: 'Newsreader, serif', fontSize: '16px', color: colors.text,
+                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                    }}>{r.title}</p>
+                    <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted }}>
+                      {r.author} · {r.downloads.toLocaleString()} downloads
+                    </p>
+                  </div>
+                  <button onClick={() => handleGutenbergImport(r.id)} disabled={importingId === r.id} style={{
+                    backgroundColor: importingId === r.id ? colors.border : accent, color: colors.bg,
+                    border: 'none', padding: '8px 16px', borderRadius: '999px', cursor: 'pointer',
+                    fontFamily: 'Manrope, sans-serif', fontSize: '11px',
+                    textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700',
+                    
+                    display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0,
+                  }}>
+                    {importingId === r.id
+                      ? <><Loader2 size={13} className="spin" /> Fetching</>
+                      : 'Import'}
+                  </button>
+                </div>
+              ))}
+              {!importLoading && importResults.length === 0 && (
+                <p style={{ textAlign: 'center', padding: '32px', fontFamily: 'Newsreader, serif', fontSize: '17px', color: colors.muted, fontStyle: 'italic' }}>
+                  Search for a classic to get started.
+                </p>
+              )}
+              {importLoading && (
+                <p style={{ textAlign: 'center', padding: '32px', fontFamily: 'Newsreader, serif', fontSize: '17px', color: colors.muted, fontStyle: 'italic' }}>
+                  Searching Gutenberg...
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div style={{
@@ -398,6 +570,7 @@ function Admin() {
                 <input name="freePreviewPages" type="number" value={form.freePreviewPages} onChange={handleFormChange} style={inputStyle} />
               </div>
 
+              {form.bookType !== 'gutenberg' && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <label style={{ ...labelStyle, marginBottom: 0 }}>Pages ({form.pages.length})</label>
@@ -437,6 +610,7 @@ function Admin() {
                   ))}
                 </div>
               </div>
+              )}
 
               <button onClick={handleSubmit} style={{
                 width: '100%', backgroundColor: accent, color: colors.bg, border: 'none',

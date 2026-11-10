@@ -9,6 +9,7 @@ import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
 import useWindowSize from '../hooks/useWindowSize'
 
 function BookDetail() {
+  
   const { darkMode } = useTheme()
   const { user } = useAuthStore()
   const { isMobile } = useWindowSize()
@@ -18,6 +19,7 @@ function BookDetail() {
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
   const [purchasing, setPurchasing] = useState(false)
+  const [previewPage, setPreviewPage] = useState(null)
 
   const colors = COLORS[darkMode ? 'dark' : 'light']
   const accent = darkMode ? ACCENT_DARK : ACCENT
@@ -26,12 +28,15 @@ function BookDetail() {
     const fetchBook = async () => {
       try {
         const headers = user ? { Authorization: `Bearer ${user.token}` } : {}
-        const [bookRes, reviewsRes] = await Promise.all([
+        const [bookRes, reviewsRes, pageRes] = await Promise.all([
           axios.get(`${API}/books/${id}`, { headers }),
           axios.get(`${API}/books/${id}/reviews`),
+          // preview page — works for both custom and gutenberg books
+          axios.get(`${API}/books/${id}/pages/1`).catch(() => ({ data: null })),
         ])
         setBook(bookRes.data)
         setReviews(reviewsRes.data)
+        setPreviewPage(pageRes.data)
       } catch {
         toast.error('Book not found')
         navigate('/')
@@ -183,7 +188,8 @@ function BookDetail() {
             }}>{book.description}</p>
 
             {/* Preview Section */}
-            {book.pages && book.pages.length > 0 && (
+
+            {(book.pages?.length > 0 || book.totalPages > 0) && (
               <div>
                 <span style={{
                   fontFamily: 'Manrope, sans-serif', fontSize: '11px',
@@ -193,17 +199,41 @@ function BookDetail() {
 
                 <div style={{ position: 'relative' }}>
                   <div style={{
-                    borderRadius: '12px', padding: '32px',
+                    borderRadius: '12px', padding: isMobile ? '24px 20px' : '40px 56px',
                     border: `1px solid ${colors.border}`,
-                    maxHeight: '280px', overflow: 'hidden',
+                    maxHeight: '420px', overflow: 'hidden',
                     backgroundColor: darkMode ? colors.card : '#fffdf9',
                   }}>
-                    <p style={{
-                      fontFamily: 'Newsreader, serif', fontSize: '18px',
-                      color: colors.text, lineHeight: '2',
-                      textIndent: '2em',
-                    }}>{book.pages[0]?.content}</p>
+                    {(previewPage?.chapterNumber || previewPage?.chapterTitle) && (
+                      <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+                        {previewPage.chapterNumber && (
+                          <div style={{
+                            fontFamily: 'Manrope, sans-serif', fontSize: '11px', fontWeight: '600',
+                            textTransform: 'uppercase', letterSpacing: '0.2em', color: accent, marginBottom: '8px',
+                          }}>Chapter {previewPage.chapterNumber}</div>
+                        )}
+                        {previewPage.chapterTitle && (
+                          <h3 style={{
+                            fontFamily: 'Newsreader, serif', fontSize: '28px', fontWeight: '400',
+                            color: colors.text, lineHeight: '1.3',
+                          }}>{previewPage.chapterTitle}</h3>
+                        )}
+                      </div>
+                    )}
+                    {(previewPage?.content || '').split(/\n\n+/).filter(Boolean).slice(0, 8).map((para, i) => (
+                      <p key={i} style={{
+                        fontFamily: 'Newsreader, serif', fontSize: '18px',
+                        color: colors.text, lineHeight: '1.85',
+                        textIndent: i === 0 ? '0' : '1.5em', marginBottom: '14px',
+                      }}>{para.replace(/_/g, '')}</p>
+                    ))}
                   </div>
+
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0, height: '140px',
+                    background: `linear-gradient(to top, ${darkMode ? colors.card : '#fffdf9'} 20%, transparent)`,
+                    borderRadius: '0 0 12px 12px', pointerEvents: 'none',
+                  }} />
 
                   {!book.owned && !book.isFree && (
                     <div style={{
@@ -280,5 +310,5 @@ function BookDetail() {
     </div>
   )
 }
-
 export default BookDetail
+

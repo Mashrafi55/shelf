@@ -16,6 +16,9 @@ function Reader() {
   const [currentPage, setCurrentPage] = useState(0)
   const [fontSize, setFontSize] = useState(18)
   const [loading, setLoading] = useState(true)
+  const [pageData, setPageData] = useState(null)
+  const [totalPages, setTotalPages] = useState(0)
+  const [pageLoading, setPageLoading] = useState(false)
 
   const colors = COLORS[darkMode ? 'dark' : 'light']
   const accent = darkMode ? ACCENT_DARK : ACCENT
@@ -26,6 +29,7 @@ function Reader() {
         const headers = user ? { Authorization: `Bearer ${user.token}` } : {}
         const { data } = await axios.get(`${API}/books/${id}`, { headers })
         setBook(data)
+        setTotalPages(data.totalPages || data.pages?.length || 0)
         if (user && data.owned) {
           const progressRes = await axios.get(`${API}/user/profile`, { headers })
           const progress = progressRes.data.readingProgress?.find(
@@ -42,6 +46,32 @@ function Reader() {
     }
     fetchBook()
   }, [id, user, navigate])
+
+  const fetchPage = async (pageNumber) => {
+    setPageLoading(true)
+    try {
+      const headers = user ? { Authorization: `Bearer ${user.token}` } : {}
+      const { data } = await axios.get(`${API}/books/${id}/pages/${pageNumber}`, { headers })
+      setPageData(data)
+      if (data.totalPages && pageNumber < data.totalPages) {
+        // pre-fetch next page silently — no loading state
+        axios.get(`${API}/books/${id}/pages/${pageNumber + 1}`, { headers }).catch(() => {})
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Could not load page')
+      navigate(`/book/${id}`)
+    } finally {
+      setPageLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!book || !totalPages) return
+    const isLocked = !book.owned && !book.isFree && currentPage >= book.freePreviewPages
+    if (isLocked) return
+    fetchPage(currentPage + 1)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [book, totalPages, currentPage])
 
   useEffect(() => {
     if (!book || !user) return
@@ -69,7 +99,7 @@ function Reader() {
     }
   }
 
-  const nextPage = () => { if (currentPage < book.pages.length - 1) setCurrentPage(p => p + 1) }
+  const nextPage = () => { if (currentPage < totalPages - 1) setCurrentPage(p => p + 1) }
   const prevPage = () => { if (currentPage > 0) setCurrentPage(p => p - 1) }
 
   if (loading) return (
@@ -78,16 +108,15 @@ function Reader() {
     </div>
   )
 
-  if (!book || !book.pages || book.pages.length === 0) return (
+  if (!book || totalPages === 0) return (
     <div style={{ backgroundColor: colors.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '16px' }}>
       <p style={{ fontFamily: 'Newsreader, serif', fontSize: '24px', color: colors.muted, fontStyle: 'italic' }}>No pages available yet.</p>
       <Link to="/" style={{ color: accent, fontFamily: 'Manrope, sans-serif', fontSize: '13px' }}>Go back home</Link>
     </div>
   )
 
-  const page = book.pages[currentPage]
-  const progress = ((currentPage + 1) / book.pages.length) * 100
   const isLocked = !book.owned && !book.isFree && currentPage >= book.freePreviewPages
+  const progress = ((currentPage + 1) / totalPages) * 100
 
   return (
     <div style={{ backgroundColor: colors.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -139,30 +168,38 @@ function Reader() {
               fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: '700',
             }}>Buy Full Book — ${book.price}</Link>
           </div>
+        ) : pageLoading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '120px 24px', gap: '16px' }}>
+            <p style={{ fontFamily: 'Newsreader, serif', fontSize: '22px', color: accent, fontStyle: 'italic' }}>Turning the page...</p>
+          </div>
         ) : (
           <>
             <p style={{
               fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase',
               letterSpacing: '0.1em', color: accent, marginBottom: '32px', fontWeight: '600',
-            }}>Page {currentPage + 1} of {book.pages.length}</p>
-            {(page?.chapterNumber || page?.chapterTitle) && (
+            }}>Page {currentPage + 1} of {totalPages}</p>
+            {(pageData?.chapterNumber || pageData?.chapterTitle) && (
               <div style={{ textAlign: 'center', margin: '48px 0' }}>
-                {page.chapterNumber && (
+                {pageData.chapterNumber && (
                   <p style={{
                     fontFamily: 'Manrope, sans-serif', fontSize: '12px', textTransform: 'uppercase',
                     letterSpacing: '0.15em', color: accent, fontWeight: '600', marginBottom: '12px',
-                  }}>{page.chapterNumber}</p>
+                  }}>{/^[ivxlcdm\d]+$/i.test(pageData.chapterNumber) ? `Chapter ${pageData.chapterNumber}` : pageData.chapterNumber}</p>
                 )}
-                {page.chapterTitle && (
+                {pageData.chapterTitle && (
                   <h2 style={{
                     fontFamily: 'Newsreader, serif', fontSize: `${fontSize + 8}px`,
                     color: colors.text, fontWeight: '400', margin: 0,
-                  }}>{page.chapterTitle}</h2>
+                  }}>{pageData.chapterTitle}</h2>
                 )}
               </div>
             )}
             <div style={{ fontFamily: 'Newsreader, serif', fontSize: `${fontSize}px`, color: colors.text, lineHeight: '1.9', textAlign: 'justify' }}>
-              {page?.content}
+              {(pageData?.content || '').split(/\n\n+/).filter(Boolean).map((para, i) => (
+                <p key={i} style={{ margin: '0 0 1.1em', textIndent: i === 0 && !pageData?.chapterTitle ? 0 : '1.5em' }}>
+                  {para.replace(/_/g, '')}
+                </p>
+              ))}
             </div>
           </>
         )}
@@ -179,12 +216,12 @@ function Reader() {
           }}>
             <ArrowLeft size={18} />
           </button>
-          <button onClick={nextPage} disabled={currentPage === book.pages.length - 1} style={{
+          <button onClick={nextPage} disabled={currentPage === totalPages - 1} style={{
             position: 'fixed', right: '24px', top: '50%', transform: 'translateY(-50%)',
             background: colors.card, border: `1px solid ${colors.border}`, borderRadius: '50%',
             width: '44px', height: '44px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: currentPage === book.pages.length - 1 ? 'not-allowed' : 'pointer',
-            opacity: currentPage === book.pages.length - 1 ? 0.3 : 1, color: colors.text,
+            cursor: currentPage === totalPages - 1 ? 'not-allowed' : 'pointer',
+            opacity: currentPage === totalPages - 1 ? 0.3 : 1, color: colors.text,
           }}>
             <ArrowRight size={18} />
           </button>
