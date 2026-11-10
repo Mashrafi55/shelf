@@ -105,7 +105,12 @@ const cleanText = (raw) => {
   if (end) text = text.slice(0, end.index)
   // scanned-edition artwork markers, e.g. "[Illustration: ...]" (can span lines)
   // (captions may contain one level of nested brackets, e.g. "[Copyright 1894 by George Allen.]")
-  text = text.replace(/\[Illustration(?:[^\[\]]|\[[^\[\]]*\])*\]/gi, '')
+  // ...but some editions put the chapter heading inside the marker ("[Illustration: TITLE\n\nChapter I.]"):
+  // keep that heading, drop the rest.
+  text = text.replace(/\[Illustration(?:[^\[\]]|\[[^\[\]]*\])*\]/gi, (match) => {
+    const last = match.slice(0, -1).split('\n').map(l => l.trim()).filter(Boolean).pop() || ''
+    return /^chapter\s+(?:[ivxlcdm]+|\d+)\.?$/i.test(last) ? `\n\n${last}\n\n` : ''
+  })
   text = text.replace(/^[ \t]*\][ \t]*$/gm, '') // orphaned closing brackets
   return text.trim()
 }

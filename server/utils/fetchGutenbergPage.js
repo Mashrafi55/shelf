@@ -14,7 +14,7 @@ const textCache = new Map() // gutenbergId -> { pages, totalPages }
 // split books are also saved to disk so restarts and repeat reads are instant
 const DISK_DIR = path.join(__dirname, '..', 'cache', 'books')
 // bump SPLIT_VERSION whenever the chapter/page splitting logic changes, so old cached splits are ignored
-const SPLIT_VERSION = 2
+const SPLIT_VERSION = 3
 const diskFile = (gutenbergId, wordsPerPage) =>
   path.join(DISK_DIR, `${String(gutenbergId).replace(/\D/g, '')}-${wordsPerPage}-v${SPLIT_VERSION}.json`)
 
