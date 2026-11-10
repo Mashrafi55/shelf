@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, Sun, Moon, BookOpen, Bookmark } from 'lucide-react'
 import axios from 'axios'
@@ -6,6 +6,7 @@ import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
 import useAuthStore from '../store/authStore'
 import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
+import useWindowSize from '../hooks/useWindowSize'
 
 function Reader() {
   const { darkMode, toggleDarkMode } = useTheme()
@@ -14,6 +15,8 @@ function Reader() {
   const navigate = useNavigate()
   const [book, setBook] = useState(null)
   const [currentPage, setCurrentPage] = useState(0)
+  const touchStartX = useRef(null)
+  const { isMobile } = useWindowSize()
   const [fontSize, setFontSize] = useState(18)
   const [loading, setLoading] = useState(true)
   const [pageData, setPageData] = useState(null)
@@ -105,6 +108,27 @@ function Reader() {
   const nextPage = () => { if (currentPage < totalPages - 1) setCurrentPage(p => p + 1) }
   const prevPage = () => { if (currentPage > 0) setCurrentPage(p => p - 1) }
 
+  // arrow keys turn pages (ignored while typing in a field)
+  useEffect(() => {
+    const onKey = (e) => {
+      if (/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return
+      if (e.key === 'ArrowRight') setCurrentPage(p => (p < totalPages - 1 ? p + 1 : p))
+      if (e.key === 'ArrowLeft') setCurrentPage(p => (p > 0 ? p - 1 : p))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [totalPages])
+
+  // swipe left = next page, swipe right = previous (needs a clear horizontal move)
+  const onTouchStart = (e) => { touchStartX.current = e.touches[0].clientX }
+  const onTouchEnd = (e) => {
+    if (touchStartX.current === null) return
+    const dx = e.changedTouches[0].clientX - touchStartX.current
+    touchStartX.current = null
+    if (dx < -60) nextPage()
+    else if (dx > 60) prevPage()
+  }
+
   if (loading) return (
     <div style={{ backgroundColor: colors.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <p style={{ fontFamily: 'Newsreader, serif', fontSize: '24px', color: colors.muted, fontStyle: 'italic' }}>Opening book...</p>
@@ -155,7 +179,7 @@ function Reader() {
         </div>
       </header>
 
-      <main style={{ flex: 1, maxWidth: '680px', margin: '0 auto', padding: '100px 24px 120px', width: '100%' }}>
+      <main onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} style={{ flex: 1, maxWidth: '680px', margin: '0 auto', padding: '100px 24px calc(120px + env(safe-area-inset-bottom))', width: '100%' }}>
         {isLocked ? (
           <div style={{ textAlign: 'center', padding: '80px 24px' }}>
             <BookOpen size={48} color={colors.muted} style={{ marginBottom: '24px' }} />
@@ -197,7 +221,7 @@ function Reader() {
                 )}
               </div>
             )}
-            <div style={{ fontFamily: 'Newsreader, serif', fontSize: `${fontSize}px`, color: colors.text, lineHeight: '1.9', textAlign: 'justify' }}>
+            <div style={{ fontFamily: 'Newsreader, serif', fontSize: `${fontSize}px`, color: colors.text, lineHeight: '1.9', textAlign: isMobile ? 'left' : 'justify' }}>
               {(pageData?.content || '').split(/\n\n+/).filter(Boolean).map((para, i) => (
                 <p key={i} style={{ margin: '0 0 1.1em', textIndent: i === 0 && !pageData?.chapterTitle ? 0 : '1.5em' }}>
                   {para.replace(/_/g, '')}
@@ -232,7 +256,7 @@ function Reader() {
       )}
 
       <div style={{
-        position: 'fixed', bottom: '32px', left: '50%', transform: 'translateX(-50%)',
+        position: 'fixed', bottom: 'calc(32px + env(safe-area-inset-bottom))', left: '50%', transform: 'translateX(-50%)',
         backgroundColor: colors.card, border: `1px solid ${colors.border}`,
         borderRadius: '999px', padding: '10px 24px',
         display: 'flex', alignItems: 'center', gap: '24px',
