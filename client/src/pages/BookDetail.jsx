@@ -24,7 +24,6 @@ function BookDetail() {
   const [previewPage, setPreviewPage] = useState(null)
   const [reloadKey, setReloadKey] = useState(0)
   const [chapters, setChapters] = useState([])
-  const [showAllChapters, setShowAllChapters] = useState(false)
 
   const colors = COLORS[darkMode ? 'dark' : 'light']
   const accent = darkMode ? ACCENT_DARK : ACCENT
@@ -250,8 +249,8 @@ function BookDetail() {
                   fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase',
                   letterSpacing: '0.1em', color: accent, fontWeight: '600', display: 'block', marginBottom: '16px',
                 }}>Chapters ({chapters.length})</span>
-                <div style={{ border: `1px solid ${colors.border}`, borderRadius: '12px', overflow: 'hidden', backgroundColor: colors.card }}>
-                  {(showAllChapters ? chapters : chapters.slice(0, 8)).map((c, i, list) => {
+                <div style={{ border: `1px solid ${colors.border}`, borderRadius: '12px', overflowY: 'auto', maxHeight: '360px', backgroundColor: colors.card, overscrollBehavior: 'contain' }}>
+                  {chapters.map((c, i, list) => {
                     const row = {
                       display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', minHeight: '52px',
                       borderBottom: i < list.length - 1 ? `1px solid ${colors.border}` : 'none',
@@ -273,13 +272,6 @@ function BookDetail() {
                       : <Link key={`${c.page}-${i}`} to={`/read/${book._id}?page=${c.page}`} style={row}>{inner}</Link>
                   })}
                 </div>
-                {chapters.length > 8 && (
-                  <button onClick={() => setShowAllChapters(v => !v)} style={{
-                    marginTop: '12px', background: 'none', border: 'none', cursor: 'pointer', color: accent,
-                    fontFamily: 'Manrope, sans-serif', fontSize: '12px', fontWeight: 700, textTransform: 'uppercase',
-                    letterSpacing: '0.05em', padding: '8px 0',
-                  }}>{showAllChapters ? 'Show fewer' : `Show all ${chapters.length} chapters`}</button>
-                )}
               </div>
             )}
 
