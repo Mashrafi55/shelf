@@ -8,7 +8,10 @@ and cached on disk, so each book stays a few KB in the database.
 - Browse page with search, genre filter, sorting and pagination; reader with chapter headings, saved reading progress and a dark/light theme
 - Reviews (write, edit, delete your own; admins can moderate) and a profile page (name, password)
 - Accounts with JWT (httpOnly cookie), email verification, password reset, genre onboarding, bookmarks, favourites and reviews
-- Admin panel: add books, edit chapter titles, search and import from Project Gutenberg
+- Admin panel: add books, edit chapter titles, search and import from Project Gutenberg, add many Gutenberg books by pasting ids/links
+- Upload your own books as PDF, EPUB or TXT (max 25 MB). They are split into chapters and pages automatically and saved as a
+  draft: check the details, then tick Published. Scanned (picture-only) PDFs are rejected. Only upload books you have the rights to.
+- Chapter list with search, reverse order, per-chapter bookmarks and reading folders (Reading, Completed, On-Hold, Plan to Read, Dropped)
 
 ## Stack
 - **Client:** React 19, Vite, Tailwind 4, react-router, zustand, react-query
