@@ -242,39 +242,6 @@ function BookDetail() {
               color: colors.text, lineHeight: '1.8', marginBottom: '40px',
             }}>{book.description}</p>
 
-            {/* Chapters */}
-            {chapters.length > 0 && (
-              <div style={{ marginBottom: '40px' }}>
-                <span style={{
-                  fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase',
-                  letterSpacing: '0.1em', color: accent, fontWeight: '600', display: 'block', marginBottom: '16px',
-                }}>Chapters ({chapters.length})</span>
-                <div style={{ border: `1px solid ${colors.border}`, borderRadius: '12px', overflowY: 'auto', maxHeight: '360px', backgroundColor: colors.card, overscrollBehavior: 'contain' }}>
-                  {chapters.map((c, i, list) => {
-                    const row = {
-                      display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', minHeight: '52px',
-                      borderBottom: i < list.length - 1 ? `1px solid ${colors.border}` : 'none',
-                      textDecoration: 'none', opacity: c.locked ? 0.55 : 1,
-                    }
-                    const inner = (
-                      <>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: '13px', fontWeight: 700, color: colors.text }}>{c.label || c.title}</div>
-                          {c.label && c.title && (
-                            <div style={{ fontFamily: 'Newsreader, serif', fontSize: '15px', color: colors.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</div>
-                          )}
-                        </div>
-                        {c.locked ? <Lock size={14} color={colors.muted} /> : <ChevronRight size={16} color={colors.muted} />}
-                      </>
-                    )
-                    return c.locked
-                      ? <div key={`${c.page}-${i}`} style={row}>{inner}</div>
-                      : <Link key={`${c.page}-${i}`} to={`/read/${book._id}?page=${c.page}`} style={row}>{inner}</Link>
-                  })}
-                </div>
-              </div>
-            )}
-
             {/* Preview Section */}
 
             {(book.pages?.length > 0 || book.totalPages > 0) && (
@@ -347,6 +314,39 @@ function BookDetail() {
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Chapters */}
+            {chapters.length > 0 && (
+              <div style={{ marginTop: '40px' }}>
+                <span style={{
+                  fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase',
+                  letterSpacing: '0.1em', color: accent, fontWeight: '600', display: 'block', marginBottom: '16px',
+                }}>Chapters ({chapters.length})</span>
+                <div style={{ border: `1px solid ${colors.border}`, borderRadius: '12px', overflowY: 'auto', maxHeight: '360px', backgroundColor: colors.card, overscrollBehavior: 'contain' }}>
+                  {chapters.map((c, i, list) => {
+                    const row = {
+                      display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 16px', minHeight: '52px',
+                      borderBottom: i < list.length - 1 ? `1px solid ${colors.border}` : 'none',
+                      textDecoration: 'none', opacity: c.locked ? 0.55 : 1,
+                    }
+                    const inner = (
+                      <>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: 'Manrope, sans-serif', fontSize: '13px', fontWeight: 700, color: colors.text }}>{c.label || c.title}</div>
+                          {c.label && c.title && (
+                            <div style={{ fontFamily: 'Newsreader, serif', fontSize: '15px', color: colors.muted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</div>
+                          )}
+                        </div>
+                        {c.locked ? <Lock size={14} color={colors.muted} /> : <ChevronRight size={16} color={colors.muted} />}
+                      </>
+                    )
+                    return c.locked
+                      ? <div key={`${c.page}-${i}`} style={row}>{inner}</div>
+                      : <Link key={`${c.page}-${i}`} to={`/read/${book._id}?page=${c.page}`} style={row}>{inner}</Link>
+                  })}
                 </div>
               </div>
             )}
