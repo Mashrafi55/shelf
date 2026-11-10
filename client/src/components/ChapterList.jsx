@@ -30,34 +30,35 @@ export default function ChapterList({ bookId, chapters, lastPage, bookmarkedPage
 
   return (
     <div style={{ marginTop: '28px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-        <span style={{
-          fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase',
-          letterSpacing: '0.1em', color: accent, fontWeight: 600,
-        }}>Chapters ({chapters.length})</span>
+      <span style={{
+        display: 'block', marginBottom: '12px',
+        fontFamily: 'Manrope, sans-serif', fontSize: '11px', textTransform: 'uppercase',
+        letterSpacing: '0.1em', color: accent, fontWeight: 600,
+      }}>Chapters ({chapters.length})</span>
+
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+        <div style={{
+          flex: '1 1 200px', display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px',
+          backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '8px',
+        }}>
+          <Search size={14} color={colors.muted} />
+          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search chapter..."
+            style={{
+              flex: 1, background: 'none', border: 'none', outline: 'none', color: colors.text,
+              fontFamily: 'Manrope, sans-serif', fontSize: '13px',
+            }} />
+        </div>
         <button onClick={() => setNewestFirst(v => !v)} aria-label="Reverse chapter order" style={{
           display: 'flex', alignItems: 'center', gap: '6px', background: colors.card, color: colors.text,
-          border: `1px solid ${colors.border}`, borderRadius: '8px', padding: '6px 12px', cursor: 'pointer',
+          border: `1px solid ${colors.border}`, borderRadius: '8px', padding: '8px 14px', cursor: 'pointer',
           fontFamily: 'Manrope, sans-serif', fontSize: '12px', fontWeight: 700,
         }}>
           <SortIcon size={14} /> Chapter
         </button>
       </div>
 
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', marginBottom: '8px',
-        backgroundColor: colors.card, border: `1px solid ${colors.border}`, borderRadius: '8px',
-      }}>
-        <Search size={14} color={colors.muted} />
-        <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search chapter..."
-          style={{
-            flex: 1, background: 'none', border: 'none', outline: 'none', color: colors.text,
-            fontFamily: 'Manrope, sans-serif', fontSize: '13px',
-          }} />
-      </div>
-
       <div className="chapter-scroll" style={{
-        border: `1px solid ${colors.border}`, borderRadius: '8px', overflowY: 'auto', maxHeight: '360px',
+        border: `1px solid ${colors.border}`, borderRadius: '8px', overflowY: 'auto', maxHeight: 'min(480px, 65vh)',
         backgroundColor: colors.card, overscrollBehavior: 'contain',
       }}>
         {rows.length === 0 && (
@@ -103,11 +104,12 @@ export default function ChapterList({ bookId, chapters, lastPage, bookmarkedPage
                   padding: '10px 0 10px 13px', textDecoration: 'none',
                 }}>
                   {text}
-                  {isHere && (
-                    <span style={{ fontFamily: 'Manrope, sans-serif', fontSize: '11px', fontWeight: 700, color: accent, whiteSpace: 'nowrap' }}>
-                      Reading · p. {lastPage}
-                    </span>
-                  )}
+                  <span style={{
+                    fontFamily: 'Manrope, sans-serif', fontSize: '12px', whiteSpace: 'nowrap',
+                    fontWeight: isHere ? 700 : 500, color: isHere ? accent : colors.muted,
+                  }}>
+                    {isHere ? `Reading · p. ${lastPage}` : `p. ${c.page}`}
+                  </span>
                 </Link>
               )}
               {!c.locked && (

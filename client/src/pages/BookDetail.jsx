@@ -223,7 +223,14 @@ function BookDetail() {
                 <Heart size={18} fill={favourited ? accent : 'none'} />
               </button>
             </div>
-            {!isMobile && chaptersSection}
+
+            {/* quick facts, so the left column is not just a cover and buttons */}
+            <dl style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px', fontFamily: 'Manrope, sans-serif', fontSize: '13px' }}>
+              <dt style={{ color: colors.muted }}>Genre</dt><dd style={{ color: colors.text, textAlign: 'right' }}>{book.genre}</dd>
+              <dt style={{ color: colors.muted }}>Pages</dt><dd style={{ color: colors.text, textAlign: 'right' }}>{Math.max(0, (book.totalPages || book.pages?.length || 0) - (book.owned ? 0 : book.frontPages || 0))}</dd>
+              {chapters.length > 0 && (<><dt style={{ color: colors.muted }}>Chapters</dt><dd style={{ color: colors.text, textAlign: 'right' }}>{chapters.length}</dd></>)}
+              <dt style={{ color: colors.muted }}>Price</dt><dd style={{ color: book.isFree ? '#4a7a4a' : colors.text, textAlign: 'right', fontWeight: 700 }}>{book.isFree ? 'Free' : `$${book.price}`}</dd>
+            </dl>
           </div>
 
           {/* Right — Info */}
@@ -350,7 +357,7 @@ function BookDetail() {
               </div>
             )}
 
-            {isMobile && chaptersSection}
+            {chaptersSection}
           </div>
         </div>
 
