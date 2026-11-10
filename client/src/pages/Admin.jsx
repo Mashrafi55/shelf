@@ -333,7 +333,7 @@ function Admin() {
           </h1>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: isMobile ? '12px' : '24px', marginBottom: isMobile ? '28px' : '48px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : 'repeat(3, 1fr)', gap: isMobile ? '12px' : '24px', marginBottom: isMobile ? '28px' : '48px' }}>
           {[
             { label: 'Total Books', value: books.length, icon: <BookOpen size={20} /> },
             { label: 'Total Users', value: users.length, icon: <Users size={20} /> },
@@ -763,7 +763,7 @@ function Admin() {
                           }}><X size={14} /></button>
                         )}
                       </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '110px 1fr', gap: '12px', marginBottom: '10px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : '110px minmax(0, 1fr)', gap: '12px', marginBottom: '10px' }}>
                         <input value={page.chapterNumber || ''} onChange={e => handlePageChange(index, 'chapterNumber', e.target.value)}
                           style={chapterInputStyle} placeholder="Ch. # (I, 1...)" />
                         <input value={page.chapterTitle || ''} onChange={e => handlePageChange(index, 'chapterTitle', e.target.value)}

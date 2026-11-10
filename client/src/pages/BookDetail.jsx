@@ -157,7 +157,7 @@ function BookDetail() {
           <ArrowLeft size={16} /> Back
         </Link>
 
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '300px 1fr', gap: isMobile ? '32px' : '64px', marginBottom: isMobile ? '40px' : '64px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'minmax(0, 1fr)' : '300px minmax(0, 1fr)', gap: isMobile ? '32px' : '64px', marginBottom: isMobile ? '40px' : '64px' }}>
 
           {/* Left — Cover + CTA */}
           <div>
@@ -225,7 +225,7 @@ function BookDetail() {
             </div>
 
             {/* quick facts, so the left column is not just a cover and buttons */}
-            <dl style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px', fontFamily: 'Manrope, sans-serif', fontSize: '13px' }}>
+            <dl style={{ marginTop: '24px', display: 'grid', gridTemplateColumns: 'auto minmax(0, 1fr)', gap: '8px 16px', fontFamily: 'Manrope, sans-serif', fontSize: '13px' }}>
               <dt style={{ color: colors.muted }}>Genre</dt><dd style={{ color: colors.text, textAlign: 'right' }}>{book.genre}</dd>
               <dt style={{ color: colors.muted }}>Pages</dt><dd style={{ color: colors.text, textAlign: 'right' }}>{Math.max(0, (book.totalPages || book.pages?.length || 0) - (book.owned ? 0 : book.frontPages || 0))}</dd>
               {chapters.length > 0 && (<><dt style={{ color: colors.muted }}>Chapters</dt><dd style={{ color: colors.text, textAlign: 'right' }}>{chapters.length}</dd></>)}

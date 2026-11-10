@@ -26,7 +26,7 @@ export default function Footer() {
       <div style={{
         maxWidth: '1280px', margin: '0 auto', padding: isMobile ? '32px 16px 24px' : '48px 24px 32px',
         display: 'grid', gap: '40px',
-        gridTemplateColumns: isMobile ? '1fr 1fr' : '2fr 1fr 1fr',
+        gridTemplateColumns: isMobile ? 'repeat(2, minmax(0, 1fr))' : '2fr 1fr 1fr',
       }}>
         <div style={{ gridColumn: isMobile ? '1 / -1' : 'auto' }}>
           <Link to="/" style={{
