@@ -1,4 +1,7 @@
+import { useEffect } from 'react'
 import { Routes, Route } from 'react-router-dom'
+import useAuthStore from './store/authStore'
+import useFavouritesStore from './store/favouritesStore'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
@@ -17,6 +20,10 @@ import ResetPassword from './pages/ResetPassword'
 import VerifyEmail from './pages/VerifyEmail'
 
 function App() {
+  const token = useAuthStore(s => s.user?.token)
+  const loadFavourites = useFavouritesStore(s => s.load)
+  const clearFavourites = useFavouritesStore(s => s.clear)
+  useEffect(() => { if (token) loadFavourites(token); else clearFavourites() }, [token, loadFavourites, clearFavourites])
 
   return (
     <>

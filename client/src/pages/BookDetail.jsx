@@ -8,6 +8,7 @@ import useAuthStore from '../store/authStore'
 import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
 import useWindowSize from '../hooks/useWindowSize'
 import ReviewSection from '../components/ReviewSection'
+import useFavouritesStore from '../store/favouritesStore'
 
 function BookDetail() {
   
@@ -83,15 +84,13 @@ function BookDetail() {
       toast.error(error.response?.data?.message || 'Something went wrong')
     }
   }
+  const favourited = useFavouritesStore(st => st.ids.includes(id))
+  const toggleFav = useFavouritesStore(st => st.toggle)
   const toggleFavourite = async () => {
     if (!user) return navigate('/login')
-    try {
-      const { data } = await axios.post(`${API}/user/favourites/${id}`, {}, { headers: authHeaders })
-      setBook(b => ({ ...b, favourited: data.favourited }))
-      toast.success(data.message)
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Something went wrong')
-    }
+    const result = await toggleFav(id, user.token)
+    if (result === null) toast.error('Could not update favourites')
+    else toast.success(result ? 'Added to favourites' : 'Removed from favourites')
   }
 
   if (loading) return (
@@ -182,12 +181,12 @@ function BookDetail() {
                   {book.inLibrary ? <><Check size={16} /> In my library</> : <><Plus size={16} /> Add to my library</>}
                 </button>
               )}
-              <button onClick={toggleFavourite} aria-label={book.favourited ? 'Remove from favourites' : 'Add to favourites'} style={{
+              <button onClick={toggleFavourite} aria-label={favourited ? 'Remove from favourites' : 'Add to favourites'} style={{
                 width: '48px', height: '48px', flexShrink: 0, borderRadius: '50%', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 backgroundColor: 'transparent', border: `1px solid ${accent}`, color: accent,
               }}>
-                <Heart size={18} fill={book.favourited ? accent : 'none'} />
+                <Heart size={18} fill={favourited ? accent : 'none'} />
               </button>
             </div>
           </div>

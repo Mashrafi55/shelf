@@ -273,7 +273,7 @@ function Admin() {
           ))}
         </div>
 
-        <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: `1px solid ${colors.border}`, overflowX: 'auto' }}>
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', borderBottom: `1px solid ${colors.border}`, overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none' }}>
           {['books', 'users', 'sales'].map(t => (
             <button key={t} onClick={() => setTab(t)} style={{
               padding: '12px 20px', minHeight: '44px', background: 'none', border: 'none',

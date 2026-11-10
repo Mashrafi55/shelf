@@ -6,12 +6,21 @@ import toast from 'react-hot-toast'
 import { useTheme } from '../context/ThemeContext'
 import useAuthStore from '../store/authStore'
 import useWindowSize from '../hooks/useWindowSize'
+import BookCard from '../components/BookCard'
+import useFavouritesStore from '../store/favouritesStore'
 import { API, ACCENT, ACCENT_DARK, COLORS } from '../constants'
+
+// % read, clamped to 0-100 (imported books keep their page count in totalPages)
+const bookProgress = ({ book, lastPage }) => {
+  const total = book.totalPages || book.pages?.length || 0
+  return total ? Math.min(100, Math.round((lastPage / total) * 100)) : 0
+}
 
 function Dashboard() {
   const { darkMode } = useTheme()
   const { user } = useAuthStore()
   const { isMobile } = useWindowSize()
+  const favouriteIds = useFavouritesStore(st => st.ids)
   const [tab, setTab] = useState('library')
   const [library, setLibrary] = useState([])
   const [favourites, setFavourites] = useState([])
@@ -46,6 +55,16 @@ function Dashboard() {
     }
     fetchData()
   }, [user, navigate])
+
+  // hearts tapped anywhere (e.g. on a library card) should show up in the Favourites tab
+  const favouriteKey = favouriteIds.join(',')
+  useEffect(() => {
+    if (!user) return
+    axios.get(`${API}/user/favourites`, { headers: { Authorization: `Bearer ${user.token}` } })
+      .then(res => setFavourites(res.data))
+      .catch(() => {})
+  }, [favouriteKey, user])
+  const shownFavourites = favourites.filter(item => item.book && favouriteIds.includes(item.book._id))
 
   const deleteBookmark = async (id) => {
     try {
@@ -116,7 +135,7 @@ function Dashboard() {
               <div style={{ height: '3px', backgroundColor: colors.border, borderRadius: '999px', marginBottom: '12px' }}>
                 <div style={{
                   height: '100%', backgroundColor: accent, borderRadius: '999px',
-                  width: `${(currentlyReading.lastPage / (currentlyReading.book.pages?.length || 1)) * 100}%`
+                  width: `${bookProgress(currentlyReading)}%`
                 }} />
               </div>
             </div>
@@ -129,7 +148,7 @@ function Dashboard() {
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '4px', marginBottom: isMobile ? '24px' : '40px', borderBottom: `1px solid ${colors.border}`, overflowX: 'auto' }}>
+        <div style={{ display: 'flex', gap: '4px', marginBottom: isMobile ? '24px' : '40px', borderBottom: `1px solid ${colors.border}`, overflowX: 'auto', overflowY: 'hidden', scrollbarWidth: 'none' }}>
           {TABS.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)} style={{
               display: 'flex', alignItems: 'center', gap: '8px',
@@ -156,28 +175,16 @@ function Dashboard() {
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? '16px' : '24px' }}>
-              {library.map(({ book }) => (
-                <Link key={book._id} to={`/read/${book._id}`} style={{ textDecoration: 'none' }}>
-                  <div style={{ backgroundColor: colors.card, borderRadius: '12px', overflow: 'hidden', border: `1px solid ${colors.border}` }}>
-                    <div style={{ aspectRatio: '2/3', overflow: 'hidden', backgroundColor: colors.border }}>
-                      <img src={book.coverImage} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                    <div style={{ padding: '16px' }}>
-                      <h3 style={{ fontFamily: 'Newsreader, serif', fontSize: '18px', color: colors.text, marginBottom: '4px' }}>{book.title}</h3>
-                      <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted, fontStyle: 'italic' }}>{book.author}</p>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+              {library.filter(item => item.book).map(({ book }) => <BookCard key={book._id} book={book} />)}
             </div>
           )
         )}
 
         {tab === 'favourites' && (
-          favourites.length === 0 ? (
+          shownFavourites.length === 0 ? (
             <div style={{ textAlign: 'center', padding: isMobile ? '48px 8px' : '80px' }}>
               <p style={{ fontFamily: 'Newsreader, serif', fontSize: '24px', color: colors.muted, fontStyle: 'italic', marginBottom: '16px' }}>
-                No favourites yet.
+                No favourites yet. Tap the heart on any book to save it here.
               </p>
               <Link to="/browse" style={{ color: accent, fontFamily: 'Manrope, sans-serif', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 Discover Books →
@@ -185,19 +192,7 @@ function Dashboard() {
             </div>
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(auto-fill, minmax(130px, 1fr))' : 'repeat(auto-fill, minmax(200px, 1fr))', gap: isMobile ? '16px' : '24px' }}>
-              {favourites.map(({ book }) => (
-                <Link key={book._id} to={`/book/${book._id}`} style={{ textDecoration: 'none' }}>
-                  <div style={{ backgroundColor: colors.card, borderRadius: '12px', overflow: 'hidden', border: `1px solid ${colors.border}` }}>
-                    <div style={{ aspectRatio: '2/3', overflow: 'hidden', backgroundColor: colors.border }}>
-                      <img src={book.coverImage} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    </div>
-                    <div style={{ padding: '16px' }}>
-                      <h3 style={{ fontFamily: 'Newsreader, serif', fontSize: '18px', color: colors.text, marginBottom: '4px' }}>{book.title}</h3>
-                      <p style={{ fontFamily: 'Manrope, sans-serif', fontSize: '12px', color: colors.muted, fontStyle: 'italic' }}>{book.author}</p>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+              {shownFavourites.map(({ book }) => <BookCard key={book._id} book={book} />)}
             </div>
           )
         )}

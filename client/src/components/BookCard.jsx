@@ -1,6 +1,9 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Star } from 'lucide-react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Star, Heart } from 'lucide-react'
+import toast from 'react-hot-toast'
+import useAuthStore from '../store/authStore'
+import useFavouritesStore from '../store/favouritesStore'
 import { useTheme } from '../context/ThemeContext'
 import { ACCENT, ACCENT_DARK, COLORS } from '../constants'
 
@@ -9,6 +12,18 @@ export default function BookCard({ book }) {
   const colors = COLORS[darkMode ? 'dark' : 'light']
   const accent = darkMode ? ACCENT_DARK : ACCENT
   const [coverFailed, setCoverFailed] = useState(false)
+  const navigate = useNavigate()
+  const user = useAuthStore(s => s.user)
+  const favourited = useFavouritesStore(s => s.ids.includes(book._id))
+  const toggleFavourite = useFavouritesStore(s => s.toggle)
+
+  const onHeart = async (e) => {
+    e.preventDefault() // the card is a link; don't open the book
+    e.stopPropagation()
+    if (!user) return navigate('/login')
+    const result = await toggleFavourite(book._id, user.token)
+    if (result === null) toast.error('Could not update favourites')
+  }
   const showCover = book.coverImage && !coverFailed
 
   return (
@@ -28,7 +43,14 @@ export default function BookCard({ book }) {
           e.currentTarget.style.boxShadow = 'none'
         }}
       >
-        <div style={{ aspectRatio: '2/3', overflow: 'hidden', backgroundColor: colors.border, flexShrink: 0 }}>
+        <div style={{ aspectRatio: '2/3', overflow: 'hidden', backgroundColor: colors.border, flexShrink: 0, position: 'relative' }}>
+          <button onClick={onHeart} aria-label={favourited ? 'Remove from favourites' : 'Add to favourites'} style={{
+            position: 'absolute', top: '8px', right: '8px', zIndex: 1, width: '36px', height: '36px',
+            borderRadius: '50%', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backgroundColor: 'rgba(0,0,0,0.45)', color: '#fff',
+          }}>
+            <Heart size={16} fill={favourited ? '#e06666' : 'none'} color={favourited ? '#e06666' : '#fff'} />
+          </button>
           {showCover ? (
             <img src={book.coverImage} alt={book.title} loading="lazy"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}

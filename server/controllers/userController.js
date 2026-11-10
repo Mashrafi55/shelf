@@ -201,6 +201,16 @@ const updateProgress = async (req, res) => {
     }
 
     await user.save()
+
+    // reading a free book puts it on the user's shelf automatically
+    const book = await Book.findById(bookId).select('isFree')
+    if (book?.isFree) {
+      await SavedBook.updateOne(
+        { user: req.user._id, book: bookId },
+        { $setOnInsert: { user: req.user._id, book: bookId } },
+        { upsert: true }
+      )
+    }
     res.json({ message: 'Progress saved' })
   } catch (error) {
     res.status(500).json({ message: error.message })
